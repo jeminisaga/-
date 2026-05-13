@@ -8,6 +8,7 @@ import {
   pickTodayPet,
   incrementBreakCount,
 } from "./lib/storage.js";
+import { SITE_LABELS } from "./lib/constants.js";
 
 const ALARM_TICK = "mpg-tick";
 
@@ -142,13 +143,16 @@ async function maybeTriggerBreak(tabId, domain) {
     lastBreakAtTotalMs: totalMs,
     breakInProgressUntil: now + breakMs + 1000, // small grace period
   });
-  await incrementBreakCount();
+  const stats = await incrementBreakCount();
 
   try {
     await chrome.tabs.sendMessage(tabId, {
       type: "INTRUDE",
       pet: { name: pet.name, imageBase64: pet.imageBase64, species: pet.species },
       breakMinutes: settings.breakMinutes,
+      siteLabel: SITE_LABELS[domain] || domain,
+      usageMinutes: Math.max(1, Math.round(totalMs / 60000)),
+      breakCount: stats.breakCountToday,
     });
   } catch (err) {
     // Content script may not be loaded yet (e.g. chrome:// page after redirect)
