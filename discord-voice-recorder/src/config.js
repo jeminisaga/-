@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const path = require('path');
 
-const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
+const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID, AUTO_RECORD, AUTO_RECORD_CHANNEL_ID } = process.env;
 
 if (!DISCORD_TOKEN) {
   console.error('[config] DISCORD_TOKEN が未設定です。.env を確認してください。');
@@ -22,4 +22,8 @@ module.exports = {
   guildId: GUILD_ID || null,
   // 録音ファイルの出力先。
   recordingsDir: path.join(__dirname, '..', 'recordings'),
+  // 人がVCに入った瞬間に自動で録音を開始するか。
+  autoRecord: String(AUTO_RECORD).toLowerCase() === 'true',
+  // 自動録音の対象チャンネルを限定したい場合のVCチャンネルID（未設定なら全VC対象）。
+  autoRecordChannelId: AUTO_RECORD_CHANNEL_ID || null,
 };
