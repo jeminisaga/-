@@ -1,8 +1,8 @@
 'use strict';
 
 const { Client, GatewayIntentBits, Events, ChannelType } = require('discord.js');
-const { token, autoRecord, autoRecordChannelId } = require('./config');
-const { startRecording, stopRecording, getSession } = require('./recorder');
+const { token, autoRecord, autoRecordChannelId, silenceTimeoutMs } = require('./config');
+const { startRecording, stopRecording, getSession, setAutoStopHandler } = require('./recorder');
 
 const client = new Client({
   // 特権インテントは不要。Guilds と GuildVoiceStates だけで動く。
@@ -17,6 +17,19 @@ client.once(Events.ClientReady, (c) => {
   } else {
     console.log('[bot] 自動録音モード: OFF（/record で手動開始）');
   }
+  if (silenceTimeoutMs > 0) {
+    console.log(`[bot] 無音自動停止: ON（${Math.round(silenceTimeoutMs / 60000)}分無音で停止）`);
+  } else {
+    console.log('[bot] 無音自動停止: OFF');
+  }
+});
+
+// 無音タイマーによる自動停止の通知。
+setAutoStopHandler((result) => {
+  notifyTextChannel(
+    result.textChannelId,
+    `⏹️ ${result.silenceMinutes}分間 発話が無かったため録音を自動停止しました。${result.fileCount} 件のファイルを保存しました。`
+  );
 });
 
 // ── スラッシュコマンド処理 ──

@@ -11,10 +11,20 @@ const {
   VoiceConnectionStatus,
   entersState,
 } = require('@discordjs/voice');
-const { recordingsDir } = require('./config');
+const { recordingsDir, silenceTimeoutMs } = require('./config');
 
 // guildId -> セッション情報 のマップ。1サーバーにつき1録音まで。
 const sessions = new Map();
+
+// 無音タイマー発火など、録音側都合で自動停止したときに呼ばれるコールバック。
+// index.js から登録され、通知の送信などに使う。
+let onAutoStop = null;
+function setAutoStopHandler(fn) {
+  onAutoStop = fn;
+}
+
+// 無音判定の確認間隔（ミリ秒）。
+const SILENCE_CHECK_INTERVAL_MS = 15_000;
 
 // ファイル名に使えない文字を潰す。
 function safeName(name) {
@@ -98,14 +108,31 @@ async function startRecording(channel, textChannel, client) {
     dir,
     activeUsers: new Set(),
     files: [],
+    // 最後に誰かが喋った時刻（無音タイマーの判定に使う）。
+    lastActivity: Date.now(),
+    silenceTimer: null,
   };
   sessions.set(guildId, session);
 
-  // 誰かが喋り始めるたびにその人専用の録音ストリームを起こす。
+  // 誰かが喋り始めるたびにその人専用の録音ストリームを起こす。発話＝アクティビティ。
   const receiver = connection.receiver;
   receiver.speaking.on('start', (userId) => {
+    session.lastActivity = Date.now();
     createListeningStream(session, userId, client);
   });
+
+  // 無音タイマー: silenceTimeoutMs 以上発話が無ければ自動停止する。
+  if (silenceTimeoutMs > 0) {
+    session.silenceTimer = setInterval(() => {
+      if (Date.now() - session.lastActivity < silenceTimeoutMs) return;
+      const minutes = Math.round(silenceTimeoutMs / 60000);
+      console.log(`[recorder] ${minutes}分間 無音のため自動停止: guild=${guildId}`);
+      const result = stopRecording(guildId);
+      if (result && typeof onAutoStop === 'function') {
+        onAutoStop({ ...result, reason: 'silence', silenceMinutes: minutes });
+      }
+    }, SILENCE_CHECK_INTERVAL_MS);
+  }
 
   // 切断されたら後始末。
   connection.on(VoiceConnectionStatus.Disconnected, () => {
@@ -122,6 +149,12 @@ function stopRecording(guildId) {
   if (!session) return null;
 
   sessions.delete(guildId);
+
+  // 無音タイマーを止める。
+  if (session.silenceTimer) {
+    clearInterval(session.silenceTimer);
+    session.silenceTimer = null;
+  }
 
   try {
     const connection = getVoiceConnection(guildId) || session.connection;
@@ -147,4 +180,5 @@ module.exports = {
   startRecording,
   stopRecording,
   getSession,
+  setAutoStopHandler,
 };
