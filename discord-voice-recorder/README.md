@@ -97,6 +97,21 @@ npm start
 
 `[bot] ログインしました: ...` が出れば成功です。
 
+## デプロイ（24時間・どのサーバーでも使う）
+
+常時稼働させて複数サーバーで使うには Docker でホストに載せるのが確実です。手順は **[DEPLOY.md](./DEPLOY.md)** を参照（Docker / docker-compose / Railway / Fly.io / systemd を網羅）。要点だけ：
+
+- `GUILD_ID` を空にするとグローバルコマンドになり、**どのサーバーでも** `/record` が使えます（反映に最大1時間）。
+- `REGISTER_COMMANDS_ON_START=true` で起動時にコマンドを自動登録（ホスト側で別途 `npm run deploy` 不要）。
+- `recordings/` は永続ボリュームにマウントして保存（コンテナ再起動で消えるため）。
+
+最短（docker-compose）:
+
+```bash
+cp .env.example .env   # 値を埋める
+docker compose up -d --build
+```
+
 ## 使い方
 
 1. 録音したい VC に**自分が参加**する

@@ -1,16 +1,26 @@
 'use strict';
 
 const { Client, GatewayIntentBits, Events, ChannelType } = require('discord.js');
-const { token, autoRecord, autoRecordChannelId, silenceTimeoutMs } = require('./config');
+const { token, autoRecord, autoRecordChannelId, silenceTimeoutMs, registerCommandsOnStart } = require('./config');
 const { startRecording, stopRecording, getSession, setAutoStopHandler } = require('./recorder');
+const { registerCommands } = require('./register-commands');
 
 const client = new Client({
   // 特権インテントは不要。Guilds と GuildVoiceStates だけで動く。
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 });
 
-client.once(Events.ClientReady, (c) => {
+client.once(Events.ClientReady, async (c) => {
   console.log(`[bot] ログインしました: ${c.user.tag}`);
+  // PaaS など一回限りのコマンド登録がしづらい環境向け: 起動時に自動登録する。
+  if (registerCommandsOnStart) {
+    try {
+      const result = await registerCommands();
+      console.log(`[bot] 起動時コマンド登録(${result.scope}): ${result.names.join(', ')}`);
+    } catch (err) {
+      console.error('[bot] 起動時コマンド登録に失敗:', err.message);
+    }
+  }
   if (autoRecord) {
     const target = autoRecordChannelId ? `チャンネルID=${autoRecordChannelId}` : '全VC';
     console.log(`[bot] 自動録音モード: ON（対象: ${target}）`);

@@ -1,0 +1,14 @@
+services:
+  bot:
+    build: .
+    image: discord-voice-recorder
+    container_name: discord-voice-recorder
+    restart: unless-stopped
+    # .env から DISCORD_TOKEN / CLIENT_ID などを読み込む。
+    env_file: .env
+    # 起動時にスラッシュコマンドを自動登録（compose 運用なら true 推奨）。
+    environment:
+      REGISTER_COMMANDS_ON_START: "true"
+    # 録音ファイルをホスト側に永続化する。
+    volumes:
+      - ./recordings:/app/recordings
