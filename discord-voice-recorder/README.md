@@ -21,7 +21,22 @@
   - Linux: `build-essential`, `python3`
   - Windows: `windows-build-tools` 相当のビルド環境
 
-## セットアップ
+## かんたん起動（ランチャー）
+
+Discord アプリの作成（後述「初回セットアップ」の 2〜4）が済んでいれば、起動はスクリプト1本でOKです。
+依存インストール・コマンド登録・起動をまとめてやります。
+
+- **Mac / Linux**: ターミナルで `./start.sh`
+- **Windows**: `start.bat` をダブルクリック
+
+初回は `.env` が自動作成されるので、`DISCORD_TOKEN` と `CLIENT_ID` を記入してもう一度実行してください。
+`[bot] ログインしました: ...` が出れば起動成功。使い終わったら **Ctrl+C** で停止します。
+
+> Docker 派の人は `.env` を用意して `docker compose up --build` でも起動できます。
+
+---
+
+## 初回セットアップ（Discord アプリの準備）
 
 ### 1. 依存関係のインストール
 
@@ -97,21 +112,6 @@ npm start
 
 `[bot] ログインしました: ...` が出れば成功です。
 
-## デプロイ（24時間・どのサーバーでも使う）
-
-常時稼働させて複数サーバーで使うには Docker でホストに載せるのが確実です。手順は **[DEPLOY.md](./DEPLOY.md)** を参照（Docker / docker-compose / Railway / Fly.io / systemd を網羅）。要点だけ：
-
-- `GUILD_ID` を空にするとグローバルコマンドになり、**どのサーバーでも** `/record` が使えます（反映に最大1時間）。
-- `REGISTER_COMMANDS_ON_START=true` で起動時にコマンドを自動登録（ホスト側で別途 `npm run deploy` 不要）。
-- `recordings/` は永続ボリュームにマウントして保存（コンテナ再起動で消えるため）。
-
-最短（docker-compose）:
-
-```bash
-cp .env.example .env   # 値を埋める
-docker compose up -d --build
-```
-
 ## 使い方
 
 1. 録音したい VC に**自分が参加**する
@@ -134,14 +134,18 @@ discord-voice-recorder/
 ├── package.json
 ├── .env.example
 ├── README.md
+├── start.sh / start.bat   # ワンショット起動ランチャー
 ├── recordings/            # 録音出力先（.gitignore 済み）
 └── src/
     ├── config.js          # .env 読み込み・検証
     ├── commands.js        # スラッシュコマンド定義
+    ├── register-commands.js # コマンド登録の共通ロジック
     ├── deploy-commands.js # コマンド登録スクリプト（npm run deploy）
     ├── recorder.js        # 録音ロジック（話者ごとの .ogg 書き出し）
     └── index.js           # Bot 本体（コマンド処理・自動停止）
 ```
+
+> `Dockerfile` / `docker-compose.yml` も同梱しています（Docker で起動したい場合のみ使用・任意）。
 
 ## 次の一手（文字起こしパイプライン連携）
 
