@@ -42,7 +42,8 @@ label {
   color: #3c4043;
 }
 input,
-select {
+select,
+textarea {
   display: block;
   width: 100%;
   box-sizing: border-box;
@@ -51,6 +52,10 @@ select {
   border: 1px solid #dadce0;
   border-radius: 4px;
   font-size: 14px;
+  font-family: inherit;
+}
+textarea {
+  resize: vertical;
 }
 
 .test {

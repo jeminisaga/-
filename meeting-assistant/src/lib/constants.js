@@ -18,6 +18,9 @@ export const DEFAULT_SETTINGS = {
   industry: "",
   suggestionCount: 3,
 
+  // 営業ノウハウ・方針（ユーザーが追記。空でも組み込みメソッドで動く）
+  playbook: "",
+
   // 呼び出し制御
   debounceMs: 1200, // 相手の発言確定後、この無音が続いたら LLM 呼び出し
   contextTurns: 12, // LLM に渡す直近の相手発言数

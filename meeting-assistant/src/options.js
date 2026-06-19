@@ -11,6 +11,7 @@ const FIELDS = [
   "llmModel",
   "language",
   "industry",
+  "playbook",
   "suggestionCount",
   "debounceMs",
   "contextTurns",
