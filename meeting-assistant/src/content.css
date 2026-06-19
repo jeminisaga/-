@@ -1,0 +1,171 @@
+/* フローティング・オーバーレイ。パネル外は pointer-events 透過でページ操作を妨げない。 */
+
+#ma-overlay {
+  position: fixed;
+  z-index: 2147483647;
+  width: 320px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(20, 22, 28, 0.96);
+  color: #e8eaed;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN",
+    Meiryo, sans-serif;
+  font-size: 13px;
+  overflow: hidden;
+}
+
+#ma-overlay .ma-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#ma-overlay .ma-drag {
+  flex: 1;
+  cursor: move;
+  font-weight: 600;
+  user-select: none;
+  white-space: nowrap;
+}
+
+#ma-overlay .ma-status {
+  font-size: 11px;
+  color: #9aa0a6;
+}
+#ma-overlay .ma-status.ma-on {
+  color: #34d399;
+}
+
+#ma-overlay .ma-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 12px;
+}
+#ma-overlay .ma-btn:hover {
+  background: #1d4ed8;
+}
+
+#ma-overlay .ma-iconbtn {
+  background: transparent;
+  border: none;
+  color: #9aa0a6;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 4px;
+}
+
+#ma-overlay .ma-body {
+  padding: 8px 10px 10px;
+  overflow-y: auto;
+}
+#ma-overlay.ma-collapsed .ma-body {
+  display: none;
+}
+
+#ma-overlay .ma-section-label {
+  font-size: 11px;
+  color: #9aa0a6;
+  margin: 6px 0 4px;
+}
+
+#ma-overlay .ma-transcript {
+  max-height: 120px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+#ma-overlay .ma-tline {
+  margin: 2px 0;
+  line-height: 1.4;
+}
+#ma-overlay .ma-tline[data-final="false"] {
+  color: #9aa0a6;
+}
+
+#ma-overlay .ma-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#ma-overlay .ma-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #2563eb;
+  border-radius: 6px;
+  padding: 8px;
+}
+#ma-overlay .ma-card-rebuttal {
+  border-left-color: #f59e0b;
+}
+
+#ma-overlay .ma-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+#ma-overlay .ma-badge {
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+#ma-overlay .ma-card-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 12px;
+}
+#ma-overlay .ma-copy {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+}
+#ma-overlay .ma-card-script {
+  line-height: 1.5;
+  color: #d4d7db;
+}
+
+#ma-overlay .ma-streaming,
+#ma-overlay .ma-empty {
+  color: #9aa0a6;
+  font-style: italic;
+}
+
+#ma-overlay .ma-needskey {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  padding: 8px;
+  line-height: 1.5;
+}
+#ma-overlay .ma-needskey a {
+  color: #60a5fa;
+}
+
+#ma-overlay .ma-toast {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+}

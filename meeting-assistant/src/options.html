@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <h1>商談アシスタント — 詳細設定</h1>
+
+    <section class="privacy">
+      <strong>プライバシーについて</strong>
+      <p>
+        この拡張は会議タブの音声（＝相手の発言）を取得し、文字起こしのため
+        <b>音声認識クラウド</b>へ、回答候補の生成のため <b>Anthropic (Claude)</b>
+        へ送信します。完全ローカルでは動作しません。録音・文字起こし・AI解析には
+        相手の同意が必要な場合があります。APIキーはこのブラウザのローカル
+        （chrome.storage.local）にのみ保存されます。
+      </p>
+    </section>
+
+    <section>
+      <h2>音声認識（STT）</h2>
+      <label>プロバイダ
+        <select id="sttProvider">
+          <option value="openai">OpenAI (Whisper)</option>
+          <option value="deepgram">Deepgram</option>
+          <option value="none">なし（無効）</option>
+        </select>
+      </label>
+      <label>APIキー
+        <input id="sttApiKey" type="password" autocomplete="off" />
+      </label>
+      <label>モデル
+        <input id="sttModel" type="text" placeholder="whisper-1 / nova-2" />
+      </label>
+      <button id="test-stt" class="test">テスト接続</button>
+      <span id="stt-result" class="result"></span>
+    </section>
+
+    <section>
+      <h2>回答生成（LLM）</h2>
+      <label>プロバイダ
+        <select id="llmProvider">
+          <option value="claude">Claude (Anthropic)</option>
+        </select>
+      </label>
+      <label>APIキー
+        <input id="llmApiKey" type="password" autocomplete="off" />
+      </label>
+      <label>モデル
+        <input id="llmModel" type="text" placeholder="claude-opus-4-8" />
+      </label>
+      <button id="test-llm" class="test">テスト接続</button>
+      <span id="llm-result" class="result"></span>
+    </section>
+
+    <section>
+      <h2>動作</h2>
+      <label>言語
+        <select id="language">
+          <option value="ja">日本語</option>
+          <option value="en">English</option>
+        </select>
+      </label>
+      <label>業種/商材
+        <input id="industry" type="text" placeholder="例: SaaS人事" />
+      </label>
+      <label>回答候補の数
+        <input id="suggestionCount" type="number" min="1" max="5" />
+      </label>
+      <label>呼び出しデバウンス(ms)
+        <input id="debounceMs" type="number" min="300" max="5000" step="100" />
+      </label>
+      <label>LLMに渡す直近発言数
+        <input id="contextTurns" type="number" min="1" max="40" />
+      </label>
+    </section>
+
+    <div class="save-row">
+      <button id="save" class="primary">保存</button>
+      <span id="saved" class="result"></span>
+    </div>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

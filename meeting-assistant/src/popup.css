@@ -1,0 +1,96 @@
+body {
+  width: 280px;
+  margin: 0;
+  padding: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  font-size: 13px;
+  color: #202124;
+  background: #fff;
+}
+
+.hdr {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.status {
+  color: #5f6368;
+}
+.status.on {
+  color: #137333;
+  font-weight: 600;
+}
+.primary {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.primary:hover {
+  background: #1d4ed8;
+}
+
+.keys {
+  background: #f1f3f4;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+.key-ind {
+  display: flex;
+  justify-content: space-between;
+  margin: 2px 0;
+}
+.ind.ok {
+  color: #137333;
+}
+.ind.ng {
+  color: #c5221f;
+}
+
+.quick label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #5f6368;
+}
+.quick select,
+.quick input {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 2px;
+  padding: 4px 6px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.link {
+  background: none;
+  border: none;
+  color: #1a73e8;
+  cursor: pointer;
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+.privacy {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #5f6368;
+  background: #fef7e0;
+  border-radius: 6px;
+  padding: 8px;
+}

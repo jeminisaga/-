@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="hdr">商談アシスタント</div>
+
+    <div class="status-row">
+      <span id="status" class="status">停止中</span>
+      <button id="toggle" class="primary">開始</button>
+    </div>
+
+    <div class="keys">
+      <div class="key-ind">
+        音声認識: <span id="stt-ind" class="ind">—</span>
+      </div>
+      <div class="key-ind">
+        回答生成(Claude): <span id="llm-ind" class="ind">—</span>
+      </div>
+    </div>
+
+    <div class="quick">
+      <label>言語
+        <select id="language">
+          <option value="ja">日本語</option>
+          <option value="en">English</option>
+        </select>
+      </label>
+      <label>業種/商材
+        <input id="industry" type="text" placeholder="例: SaaS人事" />
+      </label>
+    </div>
+
+    <button id="open-options" class="link">詳細設定（APIキー等）</button>
+
+    <div class="privacy">
+      ⚠️ 会議の音声と文字起こしは外部クラウド（音声認識・Anthropic）に送信されます。
+      録音・文字起こしには相手の同意が必要な場合があります。
+    </div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
