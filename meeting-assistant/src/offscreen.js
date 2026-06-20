@@ -61,8 +61,12 @@ async function start(streamId, settings) {
     if (stt) stt.pushPcm(ev.data); // Int16Array
   };
 
-  // worklet は処理のために destination に繋ぐ必要はないが、グラフを駆動するため source に接続
+  // source を worklet に接続し、worklet を destination に接続する。
+  // AudioWorkletNode は destination まで経路が無いとレンダリングされず
+  // process() が呼ばれないため、必ず destination まで繋ぐ。
+  // worklet は出力バッファに何も書かない＝無音なので音声は二重にならない。
   sourceNode.connect(workletNode);
+  workletNode.connect(audioCtx.destination);
 }
 
 async function stop() {
