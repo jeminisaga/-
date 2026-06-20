@@ -37,8 +37,9 @@ MV3 の service worker は DOM/getUserMedia を持てないため、音声処理
 ## 使い方
 
 1. アイコン → 「詳細設定」で APIキーを設定
-   - 音声認識: OpenAI(Whisper) か Deepgram のキー
-   - 回答生成: Anthropic (Claude) のキー、モデル `claude-opus-4-8`
+   - 音声認識: **Deepgram（既定・推奨）** か OpenAI(Whisper) のキー
+   - 回答生成: **DeepSeek（既定・最安）/ OpenAI(ChatGPT) / Claude** から選択
+     - 例: `deepseek-chat` / `gpt-4o-mini` / `claude-haiku-4-5`
    - 「テスト接続」で疎通確認
 2. 業種/商材を入力するとプロンプトに反映されます
    - 回答候補は**組み込みの営業メソッド**（反論処理 LAARC・深掘り SPIN・価値訴求・BANT・クロージング等）に沿って生成されます
@@ -64,13 +65,18 @@ src/
     storage.js                chrome.storage.local ラッパ
     messaging.js              メッセージング薄ラッパ
     stt/                      STTプロバイダ抽象化（base/openai/deepgram/index）
-    llm/                      Claude クライアント（claude/prompt/index）
+    llm/                      LLMプロバイダ抽象化
+                              （claude / openai_compat[ChatGPT・DeepSeek] / prompt / index）
 icons/                        アイコン（仮）
 ```
 
 ## 設計メモ
 
-- プロバイダ（STT/LLM）は差し替え可能。STT 追加 = `lib/stt/` に1ファイル + `index.js` に1分岐。
+- プロバイダ（STT/LLM）は差し替え可能。STT/LLM とも追加は1ファイル + `index.js` に1分岐。
+- コスト重視の既定構成: **Deepgram(STT) + DeepSeek(LLM)**。Claude は固定プロンプトを
+  Prompt Caching で約1/10に圧縮。品質不足なら設定で Claude/GPT に切替。
+- OpenAI互換(ChatGPT/DeepSeek)は `response_format: json_object`、Claude は
+  `output_config.format`（json_schema）で回答候補を JSON 化。
 - APIキー未設定でもクラッシュせず、「APIキーを設定してください」状態で動作します。
 - Claude はブラウザから直叩きするため `anthropic-dangerous-direct-browser-access: true` ヘッダを使用。
 - `claude-opus-4-8` では `temperature`/`budget_tokens` 等は送らず、構造化出力（`output_config.format`）で

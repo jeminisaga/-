@@ -1,6 +1,6 @@
 import { MSG } from "./lib/constants.js";
 import { getSettings, updateSettings } from "./lib/storage.js";
-import { createClaudeClient } from "./lib/llm/claude.js";
+import { createLLMClient } from "./lib/llm/index.js";
 
 const FIELDS = [
   "sttProvider",
@@ -52,7 +52,7 @@ async function testLlm() {
   result.textContent = "確認中…";
   result.className = "result";
   try {
-    const client = createClaudeClient(collect());
+    const client = createLLMClient(collect());
     await client.ping();
     setResult(result, "接続OK ✓", true);
   } catch (err) {

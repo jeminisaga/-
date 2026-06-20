@@ -4,14 +4,14 @@ export const DEFAULT_SETTINGS = {
   enabled: false,
 
   // 音声認識（STT）
-  sttProvider: "openai", // "openai" | "deepgram" | "none"
+  sttProvider: "deepgram", // "openai" | "deepgram" | "none"
   sttApiKey: "",
-  sttModel: "whisper-1",
+  sttModel: "nova-2",
 
-  // 回答生成（LLM）
-  llmProvider: "claude",
+  // 回答生成（LLM）。コスト重視の既定は DeepSeek。
+  llmProvider: "deepseek", // "deepseek" | "openai" | "claude"
   llmApiKey: "",
-  llmModel: "claude-opus-4-8",
+  llmModel: "deepseek-chat",
 
   // 言語・用途
   language: "ja",
@@ -37,7 +37,15 @@ export const STT_PROVIDERS = {
 };
 
 export const LLM_PROVIDERS = {
+  deepseek: "DeepSeek（最安）",
+  openai: "OpenAI (ChatGPT)",
   claude: "Claude (Anthropic)",
+};
+
+// OpenAI 互換プロバイダのエンドポイントと既定モデル
+export const OPENAI_COMPAT = {
+  deepseek: { baseUrl: "https://api.deepseek.com/v1", defaultModel: "deepseek-chat" },
+  openai: { baseUrl: "https://api.openai.com/v1", defaultModel: "gpt-4o-mini" },
 };
 
 // 文字起こしの保持上限（相手発言セグメント数）

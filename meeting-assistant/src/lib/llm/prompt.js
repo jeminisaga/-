@@ -78,6 +78,17 @@ export function buildUserContent(transcriptSegments) {
   ].join("\n");
 }
 
+// OpenAI 互換プロバイダ（json_object モード）向けの明示的な出力形式指示。
+// Claude は output_config.format でスキーマ強制するため不要。
+export function jsonShapeInstruction() {
+  return [
+    "",
+    "# 出力フォーマット（厳守）",
+    "次の形の JSON オブジェクトのみを出力する。前後に文章・コードフェンスを付けない:",
+    '{"suggestions":[{"type":"rebuttal または proposal","title":"短い見出し","script":"読み上げ用の台本"}]}',
+  ].join("\n");
+}
+
 // 構造化出力スキーマ
 export function suggestionSchema() {
   return {

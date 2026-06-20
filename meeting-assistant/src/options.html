@@ -41,6 +41,8 @@
       <h2>回答生成（LLM）</h2>
       <label>プロバイダ
         <select id="llmProvider">
+          <option value="deepseek">DeepSeek（最安）</option>
+          <option value="openai">OpenAI (ChatGPT)</option>
           <option value="claude">Claude (Anthropic)</option>
         </select>
       </label>
@@ -48,7 +50,8 @@
         <input id="llmApiKey" type="password" autocomplete="off" />
       </label>
       <label>モデル
-        <input id="llmModel" type="text" placeholder="claude-opus-4-8" />
+        <input id="llmModel" type="text"
+          placeholder="deepseek-chat / gpt-4o-mini / claude-haiku-4-5 等" />
       </label>
       <button id="test-llm" class="test">テスト接続</button>
       <span id="llm-result" class="result"></span>

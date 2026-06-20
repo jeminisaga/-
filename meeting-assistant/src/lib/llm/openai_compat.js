@@ -1,23 +1,20 @@
-// Claude API（/v1/messages）をブラウザから直叩きしてストリーミング。
-//
-// 注意:
-//  - ブラウザ origin からの呼び出しには anthropic-dangerous-direct-browser-access: true が必須。
-//  - Opus 4.8 では temperature/top_p/budget_tokens は送らない（400 になる）。
-//    低レイテンシ優先で thinking は付けず、プロンプトで「前置きなし・JSONのみ」を指示。
-//  - 構造化出力は output_config.format（旧 output_format ではない）。
+// OpenAI 互換 Chat Completions クライアント（ChatGPT / DeepSeek 等）。
+// どちらも /chat/completions + SSE ストリーミング + response_format:json_object に対応。
+// 拡張のバックグラウンド/オフスクリーンは host_permissions により CORS を回避できる。
 
-import { buildSystemPrompt, buildUserContent, suggestionSchema } from "./prompt.js";
+import { OPENAI_COMPAT } from "../constants.js";
+import { buildSystemPrompt, buildUserContent, jsonShapeInstruction } from "./prompt.js";
 
-const ENDPOINT = "https://api.anthropic.com/v1/messages";
-
-export function createClaudeClient(settings) {
-  return new ClaudeClient(settings);
+export function createOpenAICompatClient(settings) {
+  return new OpenAICompatClient(settings);
 }
 
-class ClaudeClient {
+class OpenAICompatClient {
   constructor(settings) {
+    const conf = OPENAI_COMPAT[settings.llmProvider] || OPENAI_COMPAT.openai;
+    this.baseUrl = conf.baseUrl;
     this.apiKey = settings.llmApiKey;
-    this.model = settings.llmModel || "claude-opus-4-8";
+    this.model = settings.llmModel || conf.defaultModel;
     this.settings = settings;
   }
 
@@ -25,35 +22,24 @@ class ClaudeClient {
     return !!this.apiKey;
   }
 
-  // transcript: [{text}], signal: AbortSignal, onDelta: (partialText)=>void
-  // 返り値: { suggestions: [...] }
   async suggest({ transcript, signal, onDelta }) {
+    const system = buildSystemPrompt(this.settings) + jsonShapeInstruction();
     const body = {
       model: this.model,
-      max_tokens: 1024,
       stream: true,
-      // 固定の営業メソッドプロンプトを prompt caching で安くする
-      // （5分以内の連続呼び出しで入力コストが約1/10）
-      system: [
-        {
-          type: "text",
-          text: buildSystemPrompt(this.settings),
-          cache_control: { type: "ephemeral" },
-        },
+      max_tokens: 1024,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: buildUserContent(transcript) },
       ],
-      messages: [{ role: "user", content: buildUserContent(transcript) }],
-      output_config: {
-        format: { type: "json_schema", schema: suggestionSchema() },
-      },
     };
-
     const text = await this._streamText(body, signal, onDelta);
     return safeParse(text);
   }
 
-  // 鍵の疎通確認（options のテスト接続用）
   async ping() {
-    const res = await fetch(ENDPOINT, {
+    const res = await fetch(`${this.baseUrl}/chat/completions`, {
       method: "POST",
       headers: this._headers(),
       body: JSON.stringify({
@@ -64,16 +50,14 @@ class ClaudeClient {
     });
     if (!res.ok) {
       const t = await res.text().catch(() => "");
-      throw new Error(`Claude ${res.status}: ${t.slice(0, 200)}`);
+      throw new Error(`${res.status}: ${t.slice(0, 200)}`);
     }
     return true;
   }
 
   _headers() {
     return {
-      "x-api-key": this.apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
+      Authorization: `Bearer ${this.apiKey}`,
       "content-type": "application/json",
     };
   }
@@ -81,7 +65,7 @@ class ClaudeClient {
   async _streamText(body, signal, onDelta, _retried = false) {
     let res;
     try {
-      res = await fetch(ENDPOINT, {
+      res = await fetch(`${this.baseUrl}/chat/completions`, {
         method: "POST",
         headers: this._headers(),
         body: JSON.stringify(body),
@@ -96,7 +80,6 @@ class ClaudeClient {
       const errText = await res.text().catch(() => "");
       if (res.status === 401) throw new Error("APIキーが無効です");
       if (res.status === 429) {
-        // 1回だけバックオフして再試行
         if (!_retried) {
           await delay(1500, signal);
           return this._streamText(body, signal, onDelta, true);
@@ -107,7 +90,7 @@ class ClaudeClient {
         await delay(800, signal);
         return this._streamText(body, signal, onDelta, true);
       }
-      throw new Error(`Claude ${res.status}: ${errText.slice(0, 200)}`);
+      throw new Error(`${res.status}: ${errText.slice(0, 200)}`);
     }
 
     return this._readSse(res.body, onDelta);
@@ -138,12 +121,13 @@ class ClaudeClient {
         } catch {
           continue;
         }
-        if (
-          event.type === "content_block_delta" &&
-          event.delta &&
-          event.delta.type === "text_delta"
-        ) {
-          acc += event.delta.text;
+        const delta =
+          event.choices &&
+          event.choices[0] &&
+          event.choices[0].delta &&
+          event.choices[0].delta.content;
+        if (delta) {
+          acc += delta;
           if (onDelta) onDelta(acc);
         }
       }
@@ -153,8 +137,10 @@ class ClaudeClient {
 }
 
 function safeParse(text) {
+  // json_object でも稀にコードフェンスが付くため除去してからパース
+  const cleaned = text.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
   try {
-    const obj = JSON.parse(text);
+    const obj = JSON.parse(cleaned);
     if (obj && Array.isArray(obj.suggestions)) return obj;
   } catch {
     /* fallthrough */
