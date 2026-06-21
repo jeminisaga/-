@@ -41,14 +41,25 @@ function onToggle() {
   if (capturing) {
     chrome.runtime.sendMessage({ type: MSG.STOP_CAPTURE }, () => window.close());
   } else {
-    // popup クリックは確実なユーザー操作。アクティブタブIDを渡す。
-    chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+    // popup クリックは確実なユーザー操作。getMediaStreamId は SW へ渡すと
+    // ジェスチャ/activeTab を失いやすいので、ここ（popup）で取得して streamId を渡す。
+    chrome.tabs.query({ active: true, currentWindow: true }, async ([tab]) => {
+      let streamId = null;
+      try {
+        streamId = await chrome.tabCapture.getMediaStreamId({
+          targetTabId: tab && tab.id,
+        });
+      } catch (err) {
+        // 取得失敗時は background 側のフォールバックに委ねる
+        console.warn("[MA popup] getMediaStreamId failed", err);
+      }
       chrome.runtime.sendMessage(
-        { type: MSG.START_CAPTURE, tabId: tab && tab.id },
+        { type: MSG.START_CAPTURE, tabId: tab && tab.id, streamId },
         (res) => {
           if (chrome.runtime.lastError || (res && !res.ok)) {
             statusEl.textContent =
-              "開始失敗: " + (res?.error || chrome.runtime.lastError?.message || "");
+              "開始失敗: " +
+              (res?.error || chrome.runtime.lastError?.message || "");
             return;
           }
           window.close();

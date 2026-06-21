@@ -21,7 +21,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg) return false;
   switch (msg.type) {
     case MSG.START_CAPTURE:
-      startCapture(msg.tabId)
+      startCapture(msg.tabId, msg.streamId)
         .then(() => sendResponse({ ok: true }))
         .catch((err) => sendResponse({ ok: false, error: String(err.message) }));
       return true;
@@ -55,17 +55,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 // ---------- キャプチャ開始/停止 ----------
-async function startCapture(tabId) {
+async function startCapture(tabId, streamId) {
   if (!tabId) {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     tabId = tab && tab.id;
   }
   if (!tabId) throw new Error("対象タブが見つかりません");
 
-  // ユーザー操作の文脈で stream ID を取得
-  const streamId = await chrome.tabCapture.getMediaStreamId({
-    targetTabId: tabId,
-  });
+  // streamId は popup 側（ユーザー操作の文脈）で取得済みが基本。
+  // 無ければ SW 側でフォールバック取得（content からの開始など）。
+  if (!streamId) {
+    streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tabId });
+  }
+  if (!streamId) throw new Error("音声の取得に失敗しました（タブをリロードして再試行）");
 
   await ensureOffscreen();
   const settings = await getSettings();
