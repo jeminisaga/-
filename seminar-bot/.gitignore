@@ -1,7 +1,9 @@
 node_modules/
 output/
+config/config.json
 config/credentials.json
 config/token.json
+bin/
 .env
 *.log
 .chromium-profile/
