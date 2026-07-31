@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <!-- Title is matched by Chromium's --auto-select-tab-capture-source-by-title
+         so getDisplayMedia auto-selects THIS tab with no picker. -->
+    <title>SEMINAR_SPIKE_TAB</title>
+    <style>
+      body { margin: 0; background: #111; color: #eee; font-family: sans-serif; }
+      #hud { position: fixed; top: 8px; left: 8px; font-size: 14px; }
+    </style>
+  </head>
+  <body>
+    <canvas id="c" width="640" height="360"></canvas>
+    <div id="hud">seminar-bot spike test source</div>
+    <script>
+      // --- Video: a moving bar + running timestamp so a recording is visibly non-blank.
+      const cv = document.getElementById("c");
+      const ctx = cv.getContext("2d");
+      let frame = 0;
+      function draw() {
+        frame++;
+        ctx.fillStyle = "#101820";
+        ctx.fillRect(0, 0, cv.width, cv.height);
+        const x = (frame * 4) % cv.width;
+        ctx.fillStyle = "#3ddc97";
+        ctx.fillRect(x, 120, 80, 120);
+        ctx.fillStyle = "#fff";
+        ctx.font = "28px monospace";
+        ctx.fillText("frame " + frame, 20, 50);
+        ctx.fillText(new Date().toISOString().substr(11, 12), 20, 90);
+        requestAnimationFrame(draw);
+      }
+      draw();
+
+      // --- Audio: a 440Hz tone played into the tab so tab-audio capture has signal.
+      // --autoplay-policy=no-user-gesture-required lets this start without a click.
+      try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        gain.gain.value = 0.05; // quiet but present
+        osc.frequency.value = 440;
+        osc.connect(gain).connect(ac.destination);
+        osc.start();
+        ac.resume();
+        document.getElementById("hud").textContent = "spike test source — tone playing";
+      } catch (e) {
+        document.getElementById("hud").textContent = "audio init failed: " + e;
+      }
+    </script>
+  </body>
+</html>

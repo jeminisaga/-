@@ -1,0 +1,15 @@
+{
+  "name": "seminar-bot",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Auto-join, record and transcribe online seminars (Google Meet / Zoom) from Google Calendar. Phase 0 spike.",
+  "scripts": {
+    "spike": "node spike/spike.mjs"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "playwright": "^1.48.0",
+    "ws": "^8.18.0"
+  }
+}

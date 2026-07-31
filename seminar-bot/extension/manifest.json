@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Seminar Recorder (spike)",
+  "version": "0.0.1",
+  "description": "Records the active meeting tab (audio+video) via getDisplayMedia in an offscreen document and POSTs it to the local orchestrator.",
+  "permissions": ["offscreen"],
+  "host_permissions": ["http://127.0.0.1/*"],
+  "background": {
+    "service_worker": "service_worker.js"
+  }
+}
