@@ -4,3 +4,4 @@ dist/
 *.zip
 .vscode/
 .idea/
+.wrangler/

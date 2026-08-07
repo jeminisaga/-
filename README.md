@@ -1,3 +1,5 @@
+> このリポジトリには別プロジェクトとして [`prompt-manager/`](prompt-manager/)（プロンプト管理ツール / Cloudflare Workers + D1 の MCP サーバー）も含まれています。
+
 # 🐾 My Pet Gatekeeper
 
 うちの子（あなたが登録したペット）が SNS の使いすぎを止めてくれる Chrome 拡張機能です。
