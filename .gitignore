@@ -4,3 +4,8 @@ dist/
 *.zip
 .vscode/
 .idea/
+
+# 10K Websites working folders
+_incoming/
+_review/
+*.zip
