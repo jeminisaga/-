@@ -1,0 +1,59 @@
+# jpredict 設定
+# league_id は初回に `python -m src.discover` を実行して確認・書き換える
+
+api:
+  base_url: "https://v3.football.api-sports.io"
+  # 無料枠は 100 req/day 想定。1リクエストごとに data/raw/ へキャッシュするので
+  # 同じデータの再取得では消費しない。
+  daily_budget: 90
+  timeout: 30
+
+league:
+  id: null            # ← discover で取得した J1 の id を入れる
+  season: 2026        # 2026/27シーズン。APIの season 値は discover で確認すること
+  name: "J1 League"
+
+# 情報束（アブレーション実験の腕）
+# 各腕が使う特徴量ブロックを列挙する。上から順に情報が増える。
+arms:
+  A:
+    label: "チーム名のみ"
+    blocks: [teams]
+  B:
+    label: "+ 順位・直近成績"
+    blocks: [teams, standings, recent_form]
+  C:
+    label: "+ 詳細スタッツ"
+    blocks: [teams, standings, recent_form, team_stats, h2h]
+  D:
+    label: "+ スタメン・欠場・日程"
+    blocks: [teams, standings, recent_form, team_stats, h2h, injuries, rest_days, lineups]
+  E:
+    label: "+ ニュース文脈"
+    blocks: [teams, standings, recent_form, team_stats, h2h, injuries, rest_days, lineups, news]
+
+# ベースライン（LLMと同じ土俵で採点する比較対象）
+baselines:
+  home_fixed: true      # ホーム勝ち固定
+  poisson: true         # 得失点シュリンケージ+ポアソン
+  market: true          # ブックメーカーオッズ（coverage.odds が true の場合のみ）
+
+poisson:
+  # 序盤はサンプルが少ないので、リーグ平均へ強く縮小する。
+  # weight = n / (n + shrinkage_k)
+  shrinkage_k: 6
+  home_advantage: 1.15   # 初期値。10節以降は fit_home_advantage で推定に切替
+  max_goals: 8
+
+llm:
+  # "prompts" = プロンプトファイルを書き出すだけ（Claude Code で実行 = 追加課金なし）
+  # "api"     = Anthropic API を直接叩く（従量課金）
+  mode: "prompts"
+  model: "claude-sonnet-4-6"
+  max_tokens: 1500
+
+paths:
+  raw: "data/raw"
+  predictions: "data/predictions"
+  results: "data/results"
+  prompts: "prompts"

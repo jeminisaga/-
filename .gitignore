@@ -4,3 +4,5 @@ dist/
 *.zip
 .vscode/
 .idea/
+__pycache__/
+*.pyc

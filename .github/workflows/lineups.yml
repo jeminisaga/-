@@ -1,0 +1,34 @@
+name: lineups
+
+# 試合日に毎時実行。キックオフ45分前の窓に入った試合だけAPIを叩く。
+# 窓外ならリクエストを1回も消費しない（fixture時刻はキャッシュ済み）。
+on:
+  schedule:
+    - cron: "0 2-12 * * 6,0"   # 土日 11:00〜21:00 JST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: jpredict
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - env:
+          APIFOOTBALL_KEY: ${{ secrets.APIFOOTBALL_KEY }}
+        run: |
+          R=$(python -c "import json,glob;fs=sorted(glob.glob('data/raw/round_*.json'));print(json.load(open(fs[-1]))['round'])")
+          python -m src.lineup_watch --round $R --window 45
+      - run: |
+          git config user.name "jpredict-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || (git commit -m "lineups $(date -u +%FT%TZ)" && git push)

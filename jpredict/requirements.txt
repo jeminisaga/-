@@ -1,0 +1,4 @@
+requests>=2.31
+PyYAML>=6.0
+# mode="api" のときのみ必要
+# anthropic>=0.40

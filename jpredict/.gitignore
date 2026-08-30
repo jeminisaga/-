@@ -1,0 +1,6 @@
+# スモークテストの合成データ（第99節）。
+# 実データと混ざると report.py の累積集計を汚染するので絶対にコミットしない。
+data/raw/round_99.json
+data/predictions/round_99/
+data/results/round_99.json
+prompts/round_99/
