@@ -5,8 +5,9 @@ data/raw/round_99.json として書き出す。中身は乱数なので予測の
 意味はない。目的は fetch 以降（predict → ingest → settle → report）が
 実データなしで最後まで動くことを確認すること。
 
-  python -m tools.gen_fixture_data            # 生成
-  python -m tools.gen_fixture_data --seed 7   # 別の乱数で生成
+  python -m tools.gen_fixture_data              # 第99節の合成データ
+  python -m tools.gen_fixture_data --seed 7     # 別の乱数で生成
+  python -m tools.gen_fixture_data --history    # 較正テスト用の合成履歴
 """
 from __future__ import annotations
 
@@ -204,12 +205,62 @@ def _poisson(rng: random.Random, lam: float) -> int:
             return k - 1
 
 
+def build_history(seed: int, seasons=(2022, 2023, 2024),
+                  rounds: int = 34) -> dict:
+    """tools.calibrate の動作確認用の合成履歴（3シーズン分）。
+
+    実データと同じ形状で、シーズンごとにチーム強度を引き直す。
+    中身は乱数なので較正結果に意味はない。確認できるのは
+    walk-forward の探索が最後まで動くことだけ。
+    """
+    rng = random.Random(seed)
+    teams = [(100 + i, name) for i, name in enumerate(TEAMS)]
+    past, fid = [], 900000
+    base = datetime.now(JST) - timedelta(days=365 * 4)
+
+    for si, season in enumerate(seasons):
+        strength = {t[0]: rng.uniform(0.75, 1.35) for t in teams}
+        for rnd in range(1, rounds + 1):
+            shuffled = teams[:]
+            rng.shuffle(shuffled)
+            day = base + timedelta(days=365 * si + 7 * rnd)
+            for i in range(0, len(shuffled), 2):
+                h, a = shuffled[i], shuffled[i + 1]
+                lam_h = 1.35 * strength[h[0]] / strength[a[0]] * 1.15
+                lam_a = 1.35 * strength[a[0]] / strength[h[0]]
+                fid += 1
+                f = _fx(fid, day, h, a,
+                        min(_poisson(rng, lam_h), 6),
+                        min(_poisson(rng, lam_a), 6), rnd=rnd)
+                f["league"]["season"] = season
+                past.append(f)
+
+    return {
+        "_source": "合成データ（tools.gen_fixture_data --history）",
+        "_synthetic": True,
+        "seasons": list(seasons),
+        "league_id": 98,
+        "past_fixtures": past,
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--history", action="store_true",
+                    help="第99節ではなく較正テスト用の合成履歴を生成する")
     args = ap.parse_args()
 
     cfg = load_config()
+
+    if args.history:
+        out = ROOT / "data" / "history" / "j1_history.json"
+        data = build_history(args.seed)
+        save_json(out, data)
+        print(f"合成履歴生成: {out.relative_to(ROOT)}  "
+              f"({len(data['past_fixtures'])}試合 / "
+              f"{len(data['seasons'])}シーズン)")
+        return 0
     out = ROOT / cfg["paths"]["raw"] / f"round_{ROUND:02d}.json"
     data = build(args.seed)
     save_json(out, data)

@@ -9,7 +9,7 @@ api:
   timeout: 30
 
 league:
-  id: null            # ← discover で取得した J1 の id を入れる
+  id: 98              # J1 League（実測済み）
   season: 2026        # 2026/27シーズン。APIの season 値は discover で確認すること
   name: "J1 League"
 

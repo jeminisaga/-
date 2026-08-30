@@ -69,6 +69,9 @@ J1のleague_idと、**シーズンごとのcoverageフラグ**が表示される
 表示された `league_id` を `config.yaml` の `league.id` に書き込む。
 `season` の値もdiscoverの出力で確認する（2026/27シーズンをAPIが `2026` と呼ぶか要確認）。
 
+※ J1の `league.id` は **98** と実測済み（下の「データ源の実測結果」参照）。
+   無料プランでは `discover` の coverage は 2022-2024 のものしか見られない。
+
 ### 3. 週次運用
 
 ```bash
@@ -137,6 +140,8 @@ src/lineup_watch.py      キックオフ45分前の窓でのみスタメン取�
 src/ingest.py            Claude Code出力の取り込み
 src/settle.py            結果照合・採点
 src/report.py            REPORT.md 生成
+tools/fetch_history.py     過去シーズン(2022-2024)の取得。ベースライン較正用
+tools/calibrate.py         ポアソンのパラメータをwalk-forwardで較正
 tools/gen_fixture_data.py  合成データ生成（APIキーなしの動作確認用）
 tools/settle_offline.py    合成データ用のオフライン採点ドライバ
 data/raw/                APIレスポンスのキャッシュ
@@ -166,8 +171,72 @@ python -m src.report
 第99節の生成物は `.gitignore` に入れてある。実データと混ざると
 `report.py` の累積集計を汚染するため、コミットしないこと。
 
+## データ源の実測結果（2026-08時点）
+
+API-Football のダッシュボードで実測した結果、**無料プランでは現行シーズンが
+取れない**ことが判明した。
+
+| 検証内容 | 結果 |
+|---|---|
+| `fixtures?league=98&season=2026` | ✗ `Free plans do not have access to this season, try from 2022 to 2024.` |
+| `fixtures?league=98&season=2024` | ✓ 380試合を1リクエストで取得 |
+| `fixtures/lineups`（2024） | ✓ フォーメーション＋スタメン11人 |
+| `fixtures/statistics`（2024） | ✓ |
+| `predictions` | ✓（API側の予測値） |
+| `next` / `last` パラメータ | ✗ 無料プランでは使用不可 |
+| `odds` / `injuries` | ✗ 実質0件 |
+
+J1の league id は **98**。無料枠は「2022〜2024の3シーズン、履歴のみ」。
+
+### これが実験に与える影響
+
+**過去シーズンでLLM腕を採点することはできない。** ルール1のとおり、
+2022-2024のJ1の結果はLLMの学習データに入っている可能性が排除できず、
+採点しても「予測精度」ではなく「想起の正確さ」を測ることになる。
+腕A（チーム名のみ）が最良になっても、それが推論なのか記憶なのか区別できない。
+`src/predict.py` は結果の出ている試合にLLM予測を作らせないよう機械的に止める。
+
+**ベースラインの較正には使える。** ポアソンとリーグ基準率は得点から係数を
+推定するだけで結果を記憶しないので、過去データで係数を選ぶのは統計の通常手順。
+`config.yaml` の `shrinkage_k: 6` と `home_advantage: 1.15` は現状ただの
+当て推量なので、ここを実測値に置き換えられる。
+
+**必要なのは3リクエストだけ。** ベースライン較正が読むのは
+チームIDと得点だけ（`src/baseline.py` 参照）。スタメンとスタッツは
+1試合1リクエストで約2280リクエスト＝23日かかるが、それが効くのは腕C・Dの
+特徴量であって、その腕は過去シーズンでは走らせられない。
+**23日かけて取るデータは、使えない腕のためのもの。**
+
+### 過去シーズンの使い方
+
+```bash
+export APIFOOTBALL_KEY=xxxxx
+python -m tools.fetch_history fixtures    # 3リクエスト。1140試合
+python -m tools.fetch_history export      # ベースライン較正用JSON
+python -m tools.calibrate                 # walk-forward でパラメータ探索
+python -m tools.calibrate --write         # 最良値を config.yaml へ
+```
+
+`tools/calibrate.py` は前向き検証で評価する。第r節を予測するとき学習に使うのは
+同一シーズンの第r-1節までだけで、これは本番の `predict.py` と同じ状況。
+節帯（序盤/中盤/終盤）ごとのBrierも出るので、序盤にshrinkageがどれだけ効くかが
+そのまま読める。
+
+### 現行シーズンをどう取るか（未解決）
+
+前向き実験には現行シーズンのデータが要る。ここは未解決で、選択肢は以下。
+
+- **TheSportsDB 無料** — 日程・結果のみ。順位表とスタメンは有料。腕Aしか成立しない
+- **API-Football Pro $19/月** — 現行シーズン＋スタメンまで取れる唯一の現実解
+- football-data.org 無料枠は欧州12大会のみでJリーグ非対応
+
+注意: 「1か月だけ契約して一気に落として解約」は**履歴には有効だが前向き実験には
+使えない**。前向き実験は毎週キックオフ前にその週のデータが要るので、実験を
+走らせる期間ぶんの契約が必要になる。
+
 ## 未検証の点
 
-- API-Football無料プランで `/odds` と `/injuries` が実際に返るかは未確認。discoverで確認すること
 - ラインナップが試合前に埋まるかはリーグ依存。1試合で実測してからD腕の可否を決める
+- 無料プランの分あたりリクエスト上限は未確認。`tools/fetch_history.py` の
+  `--sleep` 既定値は約9req/分と保守的に置いてある
 - スクレイピングによる補完（Football-LAB等）は各サイトの規約確認が必要

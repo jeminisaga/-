@@ -4,3 +4,6 @@ data/raw/round_99.json
 data/predictions/round_99/
 data/results/round_99.json
 prompts/round_99/
+
+# 過去シーズンのDB・書き出し（数十MB。APIから再取得できる）
+data/history/

@@ -87,6 +87,26 @@ def main() -> int:
           f"（ポアソン学習に使った試合数: {st.get('games')}）")
 
     # ---------- LLM腕 ----------
+    # ルール1（バックテストはしない）の機械的な担保。
+    # 結果が既に出ている試合にLLM予測を作らせると、測っているのが
+    # 「予測」なのか「学習データの想起」なのか永久に区別できなくなる。
+    # ベースライン（ポアソン等）は結果を記憶しないのでこの制限を受けない。
+    settled = [f for f in fixtures
+               if f["fixture"]["status"]["short"] in ("FT", "AET", "PEN")
+               or f["goals"]["home"] is not None]
+    if settled:
+        print(f"""
+中止: 第{rnd}節の {len(settled)}/{len(fixtures)} 試合は既に結果が出ています。
+結果の出た試合にLLM腕の予測を作らせることはできません（README ルール1）。
+LLMが2022-2024のJリーグを学習済みである可能性を排除できないため、
+その採点は「予測精度」ではなく「想起の正確さ」を測ってしまいます。
+
+ベースラインは上に保存済みです（統計モデルは結果を記憶しないため過去
+シーズンでも有効）。過去シーズンでやるべきなのはベースラインの較正です:
+  python -m tools.calibrate
+""")
+        return 1
+
     arms = args.arms or list(cfg["arms"].keys())
     mode = cfg["llm"]["mode"]
 
