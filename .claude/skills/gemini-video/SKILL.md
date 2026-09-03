@@ -97,9 +97,22 @@ python3 "<SKILL_DIR>/scripts/analyze.py" \
 | 動きの速い映像を細かく見たい | `--fps 2`（上限24。上げるほど高コスト） |
 | 長尺のざっくり把握、コストを抑えたい | `--resolution low` |
 | 画面の細かい文字を読ませたい | `--resolution high` |
+| 実行前にコストを知りたい | `--estimate`（トークン数だけ数えて終了） |
 | スクリプトが自動で処理すること | モデルのフォールバック、429/5xx の再試行、アップロードの後始末 |
 
 モデルは `gemini-3.7-flash` → `gemini-3.6-flash` → `gemini-flash-latest` の順にスクリプトが自動で落とす。手で `--model` を指定するのは、ユーザーが明示的に指定したときだけ。
+
+## コストの扱い
+
+課金はトークン量で決まる。動画は 1フレームあたり `--resolution low` で 64トークン、`medium`/`high` で 256トークン、既定のサンプリングは 1fps。つまり**尺と解像度がほぼそのまま料金**になる。
+
+実行前に正確なトークン数を測れる（生成は走らないので、この確認自体は課金対象の生成を伴わない）:
+
+```bash
+python3 "<SKILL_DIR>/scripts/analyze.py" --url "URL" --preset structure --estimate
+```
+
+ユーザーがコストを気にしている、または20分超の動画を扱うときは、**まず `--estimate` を出して見せてから本番を実行する。** 単価は推測せず、https://ai.google.dev/pricing を案内する。
 
 ## API呼び出しは1依頼につき1回が原則
 

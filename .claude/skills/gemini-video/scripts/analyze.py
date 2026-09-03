@@ -476,6 +476,64 @@ def call_generate_content(client, model, uri, mime, processing, resolution, star
         )
 
 
+def estimate_tokens(client, model, uri, mime, processing, resolution, start, end, fps, prompt):
+    """本番実行せずに入力トークン数を数える。count_tokens 自体は生成を伴わない。"""
+    from google.genai import types
+
+    file_kwargs = {"file_uri": uri}
+    if mime:
+        file_kwargs["mime_type"] = mime
+    part_kwargs: dict = {"file_data": types.FileData(**file_kwargs)}
+    if (start or end or fps) and sdk_supports(types.Part, "video_metadata"):
+        vm = {}
+        if start:
+            vm["start_offset"] = start
+        if end:
+            vm["end_offset"] = end
+        if fps:
+            vm["fps"] = fps
+        part_kwargs["video_metadata"] = types.VideoMetadata(**vm)
+    if sdk_supports(types.Part, "media_processing"):
+        part_kwargs["media_processing"] = "STATIC" if (start or end or fps) else processing.upper()
+
+    config = {}
+    media_resolution = generate_content_resolution(resolution)
+    if media_resolution and sdk_supports(types.CountTokensConfig, "media_resolution"):
+        config["media_resolution"] = media_resolution
+
+    try:
+        return client.models.count_tokens(
+            model=model,
+            contents=[types.Part(**part_kwargs), prompt],
+            config=config or None,
+        )
+    except (TypeError, ValueError):
+        return client.models.count_tokens(
+            model=model,
+            contents=[types.Part(file_data=types.FileData(**file_kwargs)), prompt],
+        )
+
+
+def report_estimate(result, resolution: str | None) -> None:
+    total = None
+    for attr in ("total_tokens", "total_token_count"):
+        val = getattr(result, attr, None)
+        if isinstance(val, int):
+            total = val
+            break
+    if total is None:
+        print("入力トークン数を取得できませんでした。応答:", result)
+        return
+    print("# 入力トークン見積り")
+    print()
+    print(f"- 入力トークン: {total:,}")
+    print(f"- 解像度指定: {resolution or '(既定)'}")
+    print()
+    print("出力トークンは preset により概ね 1,000〜4,000。入力が支配的です。")
+    print("料金 = 入力トークン x 入力単価 + 出力トークン x 出力単価。")
+    print("単価は https://ai.google.dev/pricing で使用モデルの行を確認してください。")
+
+
 def run_with_retries(fn, *, models: list[str], max_retries: int, label: str):
     """モデル候補を順に、各モデルで一時エラーのみ指数バックオフ再試行。"""
     last_exc: Exception | None = None
@@ -570,6 +628,23 @@ def analyze(args) -> dict:
 
     clip_note = f" clip={args.start or '0'}-{args.end or 'end'}" if (start or end) else ""
     log(f"model={models[0]} processing={processing} preset={args.preset}{clip_note}")
+
+    if args.estimate:
+        try:
+            counted, used_model = run_with_retries(
+                lambda m: estimate_tokens(
+                    client, m, uri, mime, processing, args.resolution,
+                    start, end, args.fps, prompt,
+                ),
+                models=models,
+                max_retries=args.max_retries,
+                label="count_tokens",
+            )
+            report_estimate(counted, args.resolution)
+        finally:
+            if upload_name and not args.keep_upload:
+                delete_upload(client, upload_name)
+        sys.exit(0)
 
     try:
         result = None
@@ -730,6 +805,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--upload-timeout", type=int, default=900, help="アップロード後の処理待ち上限秒")
     p.add_argument("--max-retries", type=int, default=2, help="一時エラー時の再試行回数（モデルごと）")
     p.add_argument("--keep-upload", action="store_true", help="アップロードしたファイルを削除しない")
+    p.add_argument("--estimate", action="store_true",
+                   help="分析は実行せず、入力トークン数だけ数えて終了する")
 
     p.add_argument("--out", type=Path, help="Markdownの保存先")
     p.add_argument("--dump-json", type=Path, help="メタデータ込みJSONの保存先")
