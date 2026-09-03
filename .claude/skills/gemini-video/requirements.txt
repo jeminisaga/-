@@ -1,0 +1,2 @@
+# interactions API と Part.media_processing の動作を確認したバージョン
+google-genai>=2.22.0
