@@ -39,8 +39,15 @@ python scripts\analyze.py --self-check --live
 
 注意点:
 
-- `python` で Microsoft Store が開く場合は `py -3` に置き換える（`py -3 -m pip install ...`）。
-- コマンドは `python3` ではなく `python`。スキル内のコマンド例は macOS/Linux 表記なので読み替える。
+- **`python` が本物とは限らない。** 別アプリが同梱する venv（`AppData\Local\<アプリ名>\venv\Scripts\python.exe`）に乗っ取られていると `No module named pip` になる。`py -3 -c "import sys; print(sys.executable)"` でパスを確認し、`AppData\Local\Python\...` のような本体を指していれば以降すべて `py -3` を使う:
+
+  ```powershell
+  py -3 -m pip install -U google-genai
+  py -3 scripts\analyze.py --self-check --live
+  ```
+
+- `py` も `python` も無い / Microsoft Store が開く場合は https://www.python.org/downloads/ から導入し、**"Add python.exe to PATH"** にチェック。PowerShell を開き直してから再実行。
+- コマンドは `python3` ではない。スキル内のコマンド例は macOS/Linux 表記なので読み替える。
 - エクスプローラーで `.claude` は隠しフォルダ。アドレスバーに `%USERPROFILE%\.claude\skills` を直接入力すれば開く。
 - `.env` をエクスプローラーから新規作成しようとすると名前を拒否されることがある。上記の `Copy-Item` を使うこと。
 - `chmod 600` は不要（Windows にはない）。気になる場合はファイルのプロパティ →セキュリティで自分以外のアクセスを外す。

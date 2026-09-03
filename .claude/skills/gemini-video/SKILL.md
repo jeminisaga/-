@@ -27,7 +27,18 @@ python3 "<SKILL_DIR>/scripts/analyze.py" --self-check --live
 
 未インストールなら `pip3 install -U google-genai`。
 
-**Windows ネイティブ環境では `python3` ではなく `python`（または `py -3`）、パス区切りは `\`。** 以下のコマンド例は macOS/Linux 表記なので読み替える。
+### Windows ネイティブでのインタプリタ選び
+
+パス区切りは `\`。コマンドは `python3` ではない。**どれを使うかは決め打ちせず、`--self-check` が通ったものを採用する。**
+
+`python` が別アプリの同梱 venv（`...\AppData\Local\<アプリ名>\venv\Scripts\python.exe` など）を指していて、pip も依存も無いことがある。この場合 `py -3` が本体を指す。
+
+```powershell
+py -3 -c "import sys; print(sys.executable)"     # 本体のパスを確認
+py -3 scripts\analyze.py --self-check
+```
+
+`py -3` が通ればそれを使う。無ければ `python` を試す。両方 `ng` ならセットアップ未完了なので `INSTALL.md` を案内して止める。一度決まったら、そのセッション中は同じコマンドを使い続ける。
 
 ## 実行手順
 
