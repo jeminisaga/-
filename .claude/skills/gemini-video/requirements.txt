@@ -1,2 +1,4 @@
-# interactions API と Part.media_processing の動作を確認したバージョン
-google-genai>=2.22.0
+# 推奨: 2.22.0 以上（interactions API と agentic video processing が使える）
+# 1.47.0 でも動作するが generate_content 経由になり、agentic 処理は使えない。
+# 1.47.0 が入る場合は Python が 3.9 以下。3.10+ に上げると新しい SDK が入る。
+google-genai>=1.47.0

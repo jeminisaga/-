@@ -123,6 +123,26 @@ python3 ~/.claude/skills/gemini-video/scripts/analyze.py --help
 YouTubeや動画の分解は gemini-video スキルを使い、同梱の analyze.py を実行する。
 ```
 
+## Python のバージョン
+
+`--self-check --live` に次の行が出たら、Python が古くて SDK も古い版が入っている:
+
+```
+--: SDK が古く interactions API / media_processing が未対応。動作はするが agentic 処理は使えない
+```
+
+分析自体は動くが、精度とコスト効率の良い agentic 処理が使えない。Python 3.10 以上にすると解消する。
+
+macOS（システムPythonは 3.9 のまま更新されない）:
+
+```bash
+brew install python          # 3.13 が入る
+python3 --version            # 3.10 以上になっていること
+python3 -m pip install -U google-genai
+```
+
+Homebrew 未導入なら https://www.python.org/downloads/ から入れてもよい。
+
 ## トラブル
 
 | 症状 | 対応 |

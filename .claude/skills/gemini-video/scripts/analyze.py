@@ -416,6 +416,11 @@ def call_interactions(client, model, video_block, prompt, timeout_s):
     )
 
 
+def sdk_supports(model_cls, field: str) -> bool:
+    """古い google-genai には無いフィールドがある。事前に確認して外す。"""
+    return field in (getattr(model_cls, "model_fields", None) or {})
+
+
 def call_generate_content(client, model, uri, mime, processing, resolution, start, end, fps, prompt, timeout_s):
     from google.genai import types
 
@@ -424,7 +429,8 @@ def call_generate_content(client, model, uri, mime, processing, resolution, star
         file_kwargs["mime_type"] = mime
 
     part_kwargs: dict = {"file_data": types.FileData(**file_kwargs)}
-    if start or end or fps:
+    clipping = bool(start or end or fps)
+    if clipping and sdk_supports(types.Part, "video_metadata"):
         vm: dict = {}
         if start:
             vm["start_offset"] = start
@@ -433,17 +439,24 @@ def call_generate_content(client, model, uri, mime, processing, resolution, star
         if fps:
             vm["fps"] = fps
         part_kwargs["video_metadata"] = types.VideoMetadata(**vm)
-        part_kwargs["media_processing"] = "STATIC"
-    else:
-        part_kwargs["media_processing"] = processing.upper()
+    elif clipping:
+        log("この google-genai は区間指定に未対応です。動画全体を解析します")
+
+    # media_processing は新しめのSDKにしかない。無ければモデル既定の処理になる。
+    if sdk_supports(types.Part, "media_processing"):
+        part_kwargs["media_processing"] = "STATIC" if clipping else processing.upper()
+    elif processing == "agentic":
+        log("この google-genai は agentic processing に未対応です。モデル既定の処理で続行します")
 
     config: dict = {
         "system_instruction": SYSTEM_RULES,
         "http_options": {"timeout": int(timeout_s * 1000)},
     }
     media_resolution = generate_content_resolution(resolution)
-    if media_resolution:
+    if media_resolution and sdk_supports(types.GenerateContentConfig, "media_resolution"):
         config["media_resolution"] = media_resolution
+    elif media_resolution:
+        log("この google-genai は --resolution に未対応です。既定値で続行します")
 
     try:
         return client.models.generate_content(
@@ -451,14 +464,15 @@ def call_generate_content(client, model, uri, mime, processing, resolution, star
             contents=[types.Part(**part_kwargs), prompt],
             config=config,
         )
-    except TypeError:
-        # 古いSDKで media_resolution / media_processing が無い場合は落として再試行
-        part_kwargs.pop("media_processing", None)
-        config.pop("media_resolution", None)
+    except (TypeError, ValueError) as exc:
+        # pydantic の ValidationError は ValueError。未知フィールドを落として一度だけ再試行。
+        log(f"リクエスト構築に失敗、オプションを外して再試行します: {exc}")
+        minimal = {"file_data": part_kwargs["file_data"]}
         return client.models.generate_content(
             model=model,
-            contents=[types.Part(**part_kwargs), prompt],
-            config=config,
+            contents=[types.Part(**minimal), prompt],
+            config={"system_instruction": SYSTEM_RULES,
+                    "http_options": {"timeout": int(timeout_s * 1000)}},
         )
 
 
@@ -663,6 +677,23 @@ def self_check(live: bool) -> None:
             client = genai.Client(api_key=key)
             names = [m.name for m in list(client.models.list())[:200]]
             print(f"ok: API 疎通（{len(names)} models）")
+            from google.genai import types as _types
+
+            has_interactions = hasattr(client, "interactions")
+            has_processing = sdk_supports(_types.Part, "media_processing")
+            if has_interactions and has_processing:
+                print("ok: agentic video understanding 利用可")
+            else:
+                missing = []
+                if not has_interactions:
+                    missing.append("interactions API")
+                if not has_processing:
+                    missing.append("media_processing")
+                print(
+                    f"--: SDK が古く {' / '.join(missing)} が未対応。"
+                    " 動作はするが agentic 処理は使えない"
+                    " (Python 3.10+ で pip3 install -U google-genai)"
+                )
             for candidate in [DEFAULT_MODEL, *FALLBACK_MODELS]:
                 hit = any(candidate in (n or "") for n in names)
                 print(f"{'ok' if hit else '--'}: {candidate}")
