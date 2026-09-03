@@ -22,16 +22,34 @@ pip3 install -U google-genai
 
 ## APIキー
 
-https://aistudio.google.com/apikey で取得し、シェルかプロジェクトの `.env` に置く。
+https://aistudio.google.com/apikey で取得する。
+
+### 推奨: このスキルの中だけで使う
+
+スキルディレクトリ直下に `.env` を置く。`analyze.py` の実行時にだけ読まれ、シェルにも他のプロセスにも公開されない。
 
 ```bash
-export GEMINI_API_KEY="your-key"
+cd ~/.claude/skills/gemini-video
+cp .env.example .env
+# .env を開いて GEMINI_API_KEY= の後ろにキーを貼る
+chmod 600 .env
 ```
 
-スクリプトは以下の順で `.env` を探す（既存の環境変数が優先）:
-カレント → その親ディレクトリ（5階層まで）→ ホーム → スキルディレクトリ。
+カレントディレクトリがどこでも効く。`.gitignore` 済み。
 
-`.env` は `.gitignore` に入れること。キーをチャットに貼らない。
+### 全体で使う場合
+
+`~/.claude/settings.json` の `env` ブロック、またはシェルの `export`。
+プロジェクト内の `.claude/settings.json` には**書かない**（コミットされる）。
+
+### 探索順
+
+スクリプトは `.env` を次の順で探し、**先に見つかったものが優先**（既存の環境変数が最優先）:
+カレント → その親（5階層まで）→ ホーム → スキルディレクトリ。
+
+プロジェクトごとに別のキーを使いたい場合は、そのプロジェクトに `.env` を置けばスキル側の設定を上書きできる。
+
+キーをチャットに貼らない。
 
 任意:
 
