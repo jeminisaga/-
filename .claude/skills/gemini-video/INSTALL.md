@@ -11,6 +11,41 @@ chmod +x ~/.claude/skills/gemini-video/scripts/analyze.py
 pip3 install -U google-genai
 ```
 
+## Windows
+
+Claude Code を **WSL 上で**使っている場合は、上の Linux/macOS 手順をそのまま WSL 内で実行する（`\\wsl$` 側のホームに入る）。以下は **Windows ネイティブ**の場合。
+
+PowerShell で:
+
+```powershell
+# 1. 配置
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.claude\skills" | Out-Null
+Expand-Archive -Path "$env:USERPROFILE\Downloads\gemini-video-skill.zip" `
+               -DestinationPath "$env:USERPROFILE\.claude\skills" -Force
+
+# 2. 依存
+python -m pip install -U google-genai
+
+# 3. APIキー
+cd "$env:USERPROFILE\.claude\skills\gemini-video"
+Copy-Item .env.example .env
+notepad .env          # GEMINI_API_KEY= の後ろにキーを貼って保存
+
+# 4. 確認
+python scripts\analyze.py --self-check --live
+```
+
+配置先は `C:\Users\<ユーザー名>\.claude\skills\gemini-video`。
+
+注意点:
+
+- `python` で Microsoft Store が開く場合は `py -3` に置き換える（`py -3 -m pip install ...`）。
+- コマンドは `python3` ではなく `python`。スキル内のコマンド例は macOS/Linux 表記なので読み替える。
+- エクスプローラーで `.claude` は隠しフォルダ。アドレスバーに `%USERPROFILE%\.claude\skills` を直接入力すれば開く。
+- `.env` をエクスプローラーから新規作成しようとすると名前を拒否されることがある。上記の `Copy-Item` を使うこと。
+- `chmod 600` は不要（Windows にはない）。気になる場合はファイルのプロパティ →セキュリティで自分以外のアクセスを外す。
+- 出力の文字化け対策はスクリプト側で処理済み（stdout を UTF-8 に固定）。`PYTHONUTF8` の設定は不要。
+
 ## プロジェクトスキル（そのリポジトリだけ）
 
 ```bash

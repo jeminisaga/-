@@ -135,6 +135,19 @@ PRESETS: dict[str, str] = {
 # --------------------------------------------------------------------------
 # helpers
 # --------------------------------------------------------------------------
+def force_utf8_io() -> None:
+    """Windows は stdout がパイプだと locale encoding（日本語環境では cp932）になり、
+    モデル出力に cp932 に無い文字が混ざると UnicodeEncodeError で落ちる。UTF-8 に固定する。"""
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError):
+            pass
+
+
 def log(msg: str) -> None:
     print(f"[gemini-video] {msg}", file=sys.stderr)
 
@@ -712,6 +725,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 def main() -> None:
+    force_utf8_io()
     load_dotenv_nearby()
     args = parse_args()
     if args.self_check:

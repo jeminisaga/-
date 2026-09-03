@@ -27,6 +27,8 @@ python3 "<SKILL_DIR>/scripts/analyze.py" --self-check --live
 
 未インストールなら `pip3 install -U google-genai`。
 
+**Windows ネイティブ環境では `python3` ではなく `python`（または `py -3`）、パス区切りは `\`。** 以下のコマンド例は macOS/Linux 表記なので読み替える。
+
 ## 実行手順
 
 1. **入力を確定する。** 公開YouTube URL か、ローカルファイル。非公開・限定公開のYouTubeはAPIから読めない。その場合はファイル提出を求める。YouTube以外のURL（Vimeo, Drive, X など）もURL渡し不可 → ダウンロードして `--file`。
