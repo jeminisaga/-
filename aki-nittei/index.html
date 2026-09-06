@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2f6f5e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="空き日程">
+  <title>空き日程</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== メイン画面：ここだけ触れば使える ===== -->
+<main id="view-main" class="view">
+  <header class="topbar">
+    <h1>空き日程</h1>
+    <div class="topbar-actions">
+      <button type="button" class="icon-btn" data-open="events" aria-label="予定を見る">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      </button>
+      <button type="button" class="icon-btn" data-open="settings" aria-label="設定">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="segmented" role="radiogroup" aria-label="期間">
+      <button type="button" class="seg" data-period="thisWeek" role="radio" aria-checked="false">今週</button>
+      <button type="button" class="seg" data-period="nextWeek" role="radio" aria-checked="true">来週</button>
+      <button type="button" class="seg" data-period="twoWeeks" role="radio" aria-checked="false">2週間</button>
+    </div>
+    <p class="range-label" id="range-label"></p>
+    <button type="button" class="btn-primary" id="btn-generate">空きを出す</button>
+  </section>
+
+  <section class="card output-card" id="output-card" hidden>
+    <textarea id="output" readonly rows="8" aria-label="送る文章"></textarea>
+    <button type="button" class="btn-primary btn-copy" id="btn-copy">コピーする</button>
+    <p class="hint" id="output-hint"></p>
+  </section>
+
+  <p class="note" id="sample-note">
+    いまは<strong>お試しの予定</strong>で動いています。<button type="button" class="link" data-open="events">予定を見る</button>
+  </p>
+</main>
+
+<!-- ===== 予定（段階1はここに手で入れる） ===== -->
+<section id="view-events" class="view" hidden>
+  <header class="topbar">
+    <button type="button" class="back" data-close aria-label="戻る">‹ 戻る</button>
+    <h1>予定</h1>
+    <span class="topbar-spacer"></span>
+  </header>
+
+  <form class="card form" id="event-form">
+    <h2>予定を足す</h2>
+    <label>日付 <input type="date" name="date" required></label>
+    <label class="check"><input type="checkbox" name="allDay"> 終日</label>
+    <div class="row" id="time-row">
+      <label>開始 <input type="time" name="start" value="10:00" step="300"></label>
+      <label>終了 <input type="time" name="end" value="11:00" step="300"></label>
+    </div>
+    <label>内容 <input type="text" name="title" placeholder="訪問、打ち合わせ など" maxlength="40"></label>
+    <button type="submit" class="btn-primary">足す</button>
+    <p class="form-error" id="event-error" hidden></p>
+  </form>
+
+  <section class="card">
+    <h2>入っている予定</h2>
+    <ul class="event-list" id="event-list"></ul>
+    <p class="hint" id="event-empty" hidden>予定はありません。</p>
+  </section>
+
+  <section class="card">
+    <button type="button" class="btn-secondary" id="btn-reset-sample">お試しの予定に戻す</button>
+    <button type="button" class="btn-danger" id="btn-clear-events">予定を全部消す</button>
+  </section>
+</section>
+
+<!-- ===== 設定（ふだんは触らない） ===== -->
+<section id="view-settings" class="view" hidden>
+  <header class="topbar">
+    <button type="button" class="back" data-close aria-label="戻る">‹ 戻る</button>
+    <h1>設定</h1>
+    <span class="topbar-spacer"></span>
+  </header>
+
+  <form class="card form" id="settings-form">
+    <h2>空きの条件</h2>
+    <div class="row">
+      <label>この時刻から <input type="time" name="startTime" step="900"></label>
+      <label>この時刻まで <input type="time" name="endTime" step="900"></label>
+    </div>
+    <label>1件の長さ
+      <select name="slotMinutes">
+        <option value="30">30分</option>
+        <option value="45">45分</option>
+        <option value="60">1時間</option>
+        <option value="90">1時間30分</option>
+        <option value="120">2時間</option>
+      </select>
+    </label>
+    <label>予定の前後にあける余白
+      <select name="bufferMinutes">
+        <option value="0">なし</option>
+        <option value="15">15分</option>
+        <option value="30">30分</option>
+        <option value="60">1時間</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" name="includeWeekends"> 土日も候補に入れる</label>
+    <label>いつから出すか
+      <select name="skipDays">
+        <option value="0">今日から</option>
+        <option value="1">明日から</option>
+        <option value="2">明後日から</option>
+        <option value="3">3日後から</option>
+      </select>
+    </label>
+    <label>1日に出す数
+      <select name="perDayMax">
+        <option value="1">1つ</option>
+        <option value="2">2つ</option>
+        <option value="3">3つ</option>
+        <option value="0">全部</option>
+      </select>
+    </label>
+    <label>出し方
+      <select name="mode">
+        <option value="slot">枠に分ける（14:00〜15:00）</option>
+        <option value="range">まとめる（13:00〜18:00）</option>
+      </select>
+    </label>
+
+    <h2>文面</h2>
+    <label>はじめの一文 <textarea name="header" rows="2"></textarea></label>
+    <label>おわりの一文 <textarea name="footer" rows="2"></textarea></label>
+    <label>行のあたま <input type="text" name="bullet" maxlength="4"></label>
+    <label>空きがないときの文 <input type="text" name="emptyText"></label>
+    <p class="hint">変えた内容はすぐ保存されます。</p>
+    <button type="button" class="btn-secondary" id="btn-reset-settings">最初の設定に戻す</button>
+  </form>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="slots.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
