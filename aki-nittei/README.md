@@ -1,7 +1,13 @@
-# 空き日程（段階1：お試しの予定で動く版）
+# 空き日程
 
-空いている日時を、そのまま送れる文章にする携帯向けの画面。
-要件は `要件定義.md`。この版は **段階1** = Googleカレンダーには繋がず、端末に入れた予定（初回はお試しの予定）で動く。
+空いている日時を、そのまま送れる文章にする携帯向けの画面。要件は `要件定義.md`。
+
+| 版 | 予定の出どころ | 置き場所 |
+|---|---|---|
+| 段階1（お試し） | 端末に入れた予定（初回はお試しの予定） | `index.html` をそのまま開く / claude.ai のページ |
+| **段階2（Googleカレンダー）** | 本人の Googleカレンダー | Google Apps Script のウェブアプリ。設置手順は **`gas/README.md`** |
+
+同じ画面コードが両方で動く。Apps Script の上で動いているときだけ、自動で Googleカレンダーを読む。
 
 ## 動かし方
 
@@ -34,8 +40,12 @@
 ```
 index.html            画面
 style.css             見た目
-app.js                画面の動き（保存・切り替え・コピー）
+app.js                画面の動き（予定の出どころの切り替え・保存・コピー）
 slots.js              予定 → 空き → 文面 の計算（画面に依存しない）
+build-single.mjs      上の4つを1つのHTMLにまとめる
+gas/Code.gs           Apps Script 側（Googleカレンダーを読んで画面に渡す）
+gas/index.html        Apps Script に貼る画面（生成物。build-single.mjs --gas で作る）
+gas/README.md         設置手順
 manifest.webmanifest  ホーム画面に置くための設定
 icon.svg / icon-*.png アイコン
 test/slots.test.mjs   計算部分のテスト

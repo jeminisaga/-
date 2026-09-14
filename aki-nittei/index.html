@@ -37,6 +37,7 @@
     </div>
     <p class="range-label" id="range-label"></p>
     <button type="button" class="btn-primary" id="btn-generate">空きを出す</button>
+    <p class="form-error" id="fetch-error" hidden></p>
   </section>
 
   <section class="card output-card" id="output-card" hidden>
@@ -48,7 +49,10 @@
   <p class="note" id="sample-note">
     いまは<strong>お試しの予定</strong>で動いています。<button type="button" class="link" data-open="events">予定を見る</button>
   </p>
-  <p class="version">版 3（9/14）</p>
+  <p class="note" data-only="calendar" hidden>
+    <strong>Googleカレンダー</strong>の予定から出しています。<button type="button" class="link" data-open="events">読んだ予定を見る</button>
+  </p>
+  <p class="version">版 4（9/14）</p>
 </main>
 
 <div id="boot-error" class="boot-error" hidden></div>
@@ -70,7 +74,7 @@
     <span class="topbar-spacer"></span>
   </header>
 
-  <form class="card form" id="event-form">
+  <form class="card form" id="event-form" data-only="sample">
     <h2>予定を足す</h2>
     <label>日付 <input type="date" name="date" required></label>
     <label class="check"><input type="checkbox" name="allDay"> 終日</label>
@@ -85,11 +89,17 @@
 
   <section class="card">
     <h2>入っている予定</h2>
+    <p class="hint hint-top" id="events-hint" data-only="calendar" hidden></p>
     <ul class="event-list" id="event-list"></ul>
     <p class="hint" id="event-empty" hidden>予定はありません。</p>
   </section>
 
-  <section class="card">
+  <section class="card" data-only="calendar" hidden>
+    <button type="button" class="btn-secondary" id="btn-reload-events">読み直す</button>
+    <a class="btn-link" href="https://calendar.google.com/" target="_top" rel="noopener">Googleカレンダーを開く</a>
+  </section>
+
+  <section class="card" data-only="sample">
     <button type="button" class="btn-secondary" id="btn-reset-sample">お試しの予定に戻す</button>
     <button type="button" class="btn-danger" id="btn-clear-events">予定を全部消す</button>
   </section>
@@ -127,6 +137,7 @@
       </select>
     </label>
     <label class="check"><input type="checkbox" name="includeWeekends"> 土日も候補に入れる</label>
+    <label class="check"><input type="checkbox" name="allDayBlocks"> 終日の予定がある日は出さない</label>
     <label>いつから出すか
       <select name="skipDays">
         <option value="0">今日から</option>

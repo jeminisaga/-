@@ -103,11 +103,27 @@ test('generate + sampleEvents: お試しの予定で来週の候補が出る', (
   for (const s of out.slots) assert.ok(!allDayKeys.has(S.dateKey(s.date)));
 });
 
-test('findSlots: 同じ日の候補は空き区間をまたいで散らす', () => {
+test('findSlots: 同じ日の候補は時間帯が散るように選ぶ', () => {
   const range = { start: new Date(2026, 8, 8), end: new Date(2026, 8, 8) };
+  // 予定なし: 10〜18時で8枠 → 2つなら最初と最後、3つなら最初・真ん中・最後
+  const two = S.findSlots([], range, { perDayMax: 2 }, MON);
+  assert.deepEqual(two.map(S.formatSlot), ['9/8（火）10:00〜11:00', '9/8（火）17:00〜18:00']);
+  const three = S.findSlots([], range, { perDayMax: 3 }, MON);
+  assert.deepEqual(three.map(S.formatSlot), ['9/8（火）10:00〜11:00', '9/8（火）14:00〜15:00', '9/8（火）17:00〜18:00']);
+  // 予定あり（12:30〜13:30、余白30分）: 枠は 10,11,14,15,16,17 → 2つなら 10 と 17
   const events = [{ date: '2026-09-08', start: '12:30', end: '13:30', title: 'x' }];
-  const two = S.findSlots(events, range, { perDayMax: 2, bufferMinutes: 30 }, MON);
-  assert.deepEqual(two.map(S.formatSlot), ['9/8（火）10:00〜11:00', '9/8（火）14:00〜15:00']);
-  const three = S.findSlots(events, range, { perDayMax: 3, bufferMinutes: 30 }, MON);
-  assert.deepEqual(three.map(S.formatSlot), ['9/8（火）10:00〜11:00', '9/8（火）11:00〜12:00', '9/8（火）14:00〜15:00']);
+  const withEv = S.findSlots(events, range, { perDayMax: 2, bufferMinutes: 30 }, MON);
+  assert.deepEqual(withEv.map(S.formatSlot), ['9/8（火）10:00〜11:00', '9/8（火）17:00〜18:00']);
+  const one = S.findSlots(events, range, { perDayMax: 1, bufferMinutes: 30 }, MON);
+  assert.deepEqual(one.map(S.formatSlot), ['9/8（火）10:00〜11:00']);
+});
+
+test('findSlots: 終日の予定を無視する設定', () => {
+  const range = { start: new Date(2026, 8, 9), end: new Date(2026, 8, 9) };
+  const events = [{ date: '2026-09-09', allDay: true, title: '誕生日' }];
+  assert.equal(S.findSlots(events, range, { perDayMax: 1 }, MON).length, 0);
+  assert.equal(S.findSlots(events, range, { perDayMax: 1, allDayBlocks: false }, MON).length, 1);
+  // 日またぎを分けたときの '24:00' も読める
+  const late = [{ date: '2026-09-09', start: '17:00', end: '24:00', title: '夜勤' }];
+  assert.deepEqual(S.findSlots(late, range, { perDayMax: 0, bufferMinutes: 0 }, MON).map(S.formatSlot).slice(-1), ['9/9（水）16:00〜17:00']);
 });

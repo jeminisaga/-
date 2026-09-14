@@ -1,0 +1,864 @@
+<!-- 生成物。直すときは index.html / style.css / slots.js / app.js を直して `node build-single.mjs gas/index.html --gas` -->
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2f6f5e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="空き日程">
+  <title>空き日程</title>
+  <style>
+:root {
+  --green: #2f6f5e;
+  --green-dark: #245a4c;
+  --bg: #f4f6f5;
+  --card: #ffffff;
+  --text: #1e2a27;
+  --muted: #6b7975;
+  --line: #dfe5e2;
+  --danger: #b4463c;
+  --radius: 14px;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.view { max-width: 520px; margin: 0 auto; padding: 0 14px 40px; }
+.view[hidden] { display: none; }
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: calc(12px + env(safe-area-inset-top)) 0 8px;
+  min-height: 56px;
+}
+.topbar h1 { font-size: 22px; margin: 0; font-weight: 700; }
+.topbar-actions { display: flex; gap: 6px; }
+.topbar-spacer { width: 64px; }
+.icon-btn {
+  width: 44px; height: 44px; border: none; border-radius: 12px; background: transparent;
+  color: var(--green); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.icon-btn:active { background: #e3ebe8; }
+.icon-btn svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.back { border: none; background: transparent; color: var(--green); font-size: 17px; padding: 8px 0; min-width: 64px; text-align: left; cursor: pointer; }
+
+.card {
+  background: var(--card); border-radius: var(--radius); padding: 16px;
+  margin: 12px 0; box-shadow: 0 1px 2px rgba(0,0,0,.05);
+}
+.card h2 { font-size: 15px; color: var(--muted); margin: 0 0 12px; font-weight: 600; }
+.card h2 + .row, .card h2 ~ h2 { margin-top: 20px; }
+
+.segmented { display: flex; background: #e9eeec; border-radius: 12px; padding: 4px; gap: 4px; }
+.seg {
+  flex: 1; border: none; background: transparent; border-radius: 9px; padding: 12px 0;
+  font-size: 17px; color: var(--muted); cursor: pointer; font-weight: 600;
+}
+.seg[aria-checked="true"] { background: #fff; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.range-label { text-align: center; color: var(--muted); font-size: 14px; margin: 10px 0 12px; min-height: 1.4em; }
+
+.btn-primary, .btn-secondary, .btn-danger {
+  display: block; width: 100%; border: none; border-radius: 12px;
+  padding: 16px; font-size: 19px; font-weight: 700; cursor: pointer;
+}
+.btn-primary { background: var(--green); color: #fff; }
+.btn-primary:active { background: var(--green-dark); }
+.btn-secondary { background: #e9eeec; color: var(--text); font-size: 17px; font-weight: 600; }
+.btn-danger { background: transparent; color: var(--danger); font-size: 16px; font-weight: 600; margin-top: 8px; }
+.btn-copy { margin-top: 12px; }
+
+.output-card textarea {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+  font: inherit; font-size: 16px; line-height: 1.6; resize: none; background: #fbfcfc; color: var(--text);
+}
+.hint { color: var(--muted); font-size: 14px; margin: 10px 0 0; }
+.note { text-align: center; color: var(--muted); font-size: 14px; margin: 18px 0; }
+.link { border: none; background: none; color: var(--green); font: inherit; text-decoration: underline; padding: 0; cursor: pointer; }
+
+.form label { display: block; margin: 0 0 14px; font-size: 15px; color: var(--muted); }
+.form input[type="date"], .form input[type="time"], .form input[type="text"], .form select, .form textarea {
+  display: block; width: 100%; margin-top: 4px; padding: 10px 12px; font: inherit; font-size: 17px;
+  color: var(--text); background: #fff; border: 1px solid var(--line); border-radius: 10px; min-height: 44px;
+}
+.form textarea { resize: vertical; }
+.form .check { display: flex; align-items: center; gap: 10px; color: var(--text); font-size: 17px; }
+.form .check input { width: 22px; height: 22px; margin: 0; }
+.row { display: flex; gap: 12px; }
+.row > label { flex: 1; }
+.form-error { color: var(--danger); font-size: 14px; margin: 10px 0 0; }
+
+.event-list { list-style: none; margin: 0; padding: 0; }
+.event-list li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+.event-list li:first-child { border-top: none; }
+.event-date { min-width: 4.8em; color: var(--muted); font-size: 15px; }
+.event-time { min-width: 6em; font-variant-numeric: tabular-nums; font-size: 16px; }
+.event-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.event-del { border: none; background: transparent; color: var(--danger); font-size: 15px; padding: 8px; cursor: pointer; }
+
+.version { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }
+.hint-top { margin: 0 0 10px; }
+.btn-link {
+  display: block; text-align: center; margin-top: 12px; padding: 12px; color: var(--green);
+  font-size: 16px; font-weight: 600; text-decoration: none;
+}
+.btn-primary:disabled { opacity: .6; cursor: default; }
+.boot-error {
+  position: fixed; left: 12px; right: 12px; top: 12px; z-index: 20;
+  background: #fdecea; color: var(--danger); border: 1px solid #f1b8b2; border-radius: 10px;
+  padding: 12px 14px; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere;
+}
+.toast {
+  position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  background: var(--text); color: #fff; padding: 12px 20px; border-radius: 999px; font-size: 16px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.2); z-index: 10;
+}
+.toast[hidden] { display: none; }
+</style>
+</head>
+<body>
+
+<!-- ===== メイン画面：ここだけ触れば使える ===== -->
+<main id="view-main" class="view">
+  <header class="topbar">
+    <h1>空き日程</h1>
+    <div class="topbar-actions">
+      <button type="button" class="icon-btn" data-open="events" aria-label="予定を見る">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      </button>
+      <button type="button" class="icon-btn" data-open="settings" aria-label="設定">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="segmented" role="radiogroup" aria-label="期間">
+      <button type="button" class="seg" data-period="thisWeek" role="radio" aria-checked="false">今週</button>
+      <button type="button" class="seg" data-period="nextWeek" role="radio" aria-checked="true">来週</button>
+      <button type="button" class="seg" data-period="twoWeeks" role="radio" aria-checked="false">2週間</button>
+    </div>
+    <p class="range-label" id="range-label"></p>
+    <button type="button" class="btn-primary" id="btn-generate">空きを出す</button>
+    <p class="form-error" id="fetch-error" hidden></p>
+  </section>
+
+  <section class="card output-card" id="output-card" hidden>
+    <textarea id="output" readonly rows="8" aria-label="送る文章"></textarea>
+    <button type="button" class="btn-primary btn-copy" id="btn-copy">コピーする</button>
+    <p class="hint" id="output-hint"></p>
+  </section>
+
+  <p class="note" id="sample-note">
+    いまは<strong>お試しの予定</strong>で動いています。<button type="button" class="link" data-open="events">予定を見る</button>
+  </p>
+  <p class="note" data-only="calendar" hidden>
+    <strong>Googleカレンダー</strong>の予定から出しています。<button type="button" class="link" data-open="events">読んだ予定を見る</button>
+  </p>
+  <p class="version">版 4（9/14）</p>
+</main>
+
+<div id="boot-error" class="boot-error" hidden></div>
+<script>
+  // 画面が動かないとき、原因を見える場所に出す（開発者ツールが開けない携帯向け）
+  window.addEventListener('error', function (e) {
+    var el = document.getElementById('boot-error');
+    if (!el) return;
+    el.hidden = false;
+    el.textContent = '画面の読み込みで問題が起きました。この文をそのまま伝えてください: ' + (e.message || '不明なエラー');
+  });
+</script>
+
+<!-- ===== 予定（段階1はここに手で入れる） ===== -->
+<section id="view-events" class="view" hidden>
+  <header class="topbar">
+    <button type="button" class="back" data-close aria-label="戻る">‹ 戻る</button>
+    <h1>予定</h1>
+    <span class="topbar-spacer"></span>
+  </header>
+
+  <form class="card form" id="event-form" data-only="sample">
+    <h2>予定を足す</h2>
+    <label>日付 <input type="date" name="date" required></label>
+    <label class="check"><input type="checkbox" name="allDay"> 終日</label>
+    <div class="row" id="time-row">
+      <label>開始 <input type="time" name="start" value="10:00" step="300"></label>
+      <label>終了 <input type="time" name="end" value="11:00" step="300"></label>
+    </div>
+    <label>内容 <input type="text" name="title" placeholder="訪問、打ち合わせ など" maxlength="40"></label>
+    <button type="submit" class="btn-primary">足す</button>
+    <p class="form-error" id="event-error" hidden></p>
+  </form>
+
+  <section class="card">
+    <h2>入っている予定</h2>
+    <p class="hint hint-top" id="events-hint" data-only="calendar" hidden></p>
+    <ul class="event-list" id="event-list"></ul>
+    <p class="hint" id="event-empty" hidden>予定はありません。</p>
+  </section>
+
+  <section class="card" data-only="calendar" hidden>
+    <button type="button" class="btn-secondary" id="btn-reload-events">読み直す</button>
+    <a class="btn-link" href="https://calendar.google.com/" target="_top" rel="noopener">Googleカレンダーを開く</a>
+  </section>
+
+  <section class="card" data-only="sample">
+    <button type="button" class="btn-secondary" id="btn-reset-sample">お試しの予定に戻す</button>
+    <button type="button" class="btn-danger" id="btn-clear-events">予定を全部消す</button>
+  </section>
+</section>
+
+<!-- ===== 設定（ふだんは触らない） ===== -->
+<section id="view-settings" class="view" hidden>
+  <header class="topbar">
+    <button type="button" class="back" data-close aria-label="戻る">‹ 戻る</button>
+    <h1>設定</h1>
+    <span class="topbar-spacer"></span>
+  </header>
+
+  <form class="card form" id="settings-form">
+    <h2>空きの条件</h2>
+    <div class="row">
+      <label>この時刻から <input type="time" name="startTime" step="900"></label>
+      <label>この時刻まで <input type="time" name="endTime" step="900"></label>
+    </div>
+    <label>1件の長さ
+      <select name="slotMinutes">
+        <option value="30">30分</option>
+        <option value="45">45分</option>
+        <option value="60">1時間</option>
+        <option value="90">1時間30分</option>
+        <option value="120">2時間</option>
+      </select>
+    </label>
+    <label>予定の前後にあける余白
+      <select name="bufferMinutes">
+        <option value="0">なし</option>
+        <option value="15">15分</option>
+        <option value="30">30分</option>
+        <option value="60">1時間</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" name="includeWeekends"> 土日も候補に入れる</label>
+    <label class="check"><input type="checkbox" name="allDayBlocks"> 終日の予定がある日は出さない</label>
+    <label>いつから出すか
+      <select name="skipDays">
+        <option value="0">今日から</option>
+        <option value="1">明日から</option>
+        <option value="2">明後日から</option>
+        <option value="3">3日後から</option>
+      </select>
+    </label>
+    <label>1日に出す数
+      <select name="perDayMax">
+        <option value="1">1つ</option>
+        <option value="2">2つ</option>
+        <option value="3">3つ</option>
+        <option value="0">全部</option>
+      </select>
+    </label>
+    <label>出し方
+      <select name="mode">
+        <option value="slot">枠に分ける（14:00〜15:00）</option>
+        <option value="range">まとめる（13:00〜18:00）</option>
+      </select>
+    </label>
+
+    <h2>文面</h2>
+    <label>はじめの一文 <textarea name="header" rows="2"></textarea></label>
+    <label>おわりの一文 <textarea name="footer" rows="2"></textarea></label>
+    <label>行のあたま <input type="text" name="bullet" maxlength="4"></label>
+    <label>空きがないときの文 <input type="text" name="emptyText"></label>
+    <p class="hint">変えた内容はすぐ保存されます。</p>
+    <button type="button" class="btn-secondary" id="btn-reset-settings">最初の設定に戻す</button>
+  </form>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+/*
+ * 空き日程を出す道具 ― 計算部分
+ * 画面（app.js）からも Node のテストからも同じものを使う。
+ * ここには「予定」→「空き」→「文面」の変換しか書かない。画面のことは書かない。
+ */
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory();
+  else root.AkiSlots = factory();
+})(typeof self !== 'undefined' ? self : this, function () {
+  'use strict';
+
+  var WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
+
+  var DEFAULT_SETTINGS = {
+    startTime: '10:00',      // 候補にする時間帯（開始）
+    endTime: '18:00',        // 候補にする時間帯（終了）
+    slotMinutes: 60,         // 1件あたりの長さ
+    bufferMinutes: 30,       // 予定の前後にあける余白
+    includeWeekends: false,  // 土日を候補に入れるか
+    allDayBlocks: true,      // 終日の予定がある日を「空きなし」とみなすか
+    skipDays: 1,             // 直近を何日除くか（1 = 明日から）
+    perDayMax: 2,            // 1日に出す候補の数（0 = 全部）
+    mode: 'slot',            // 'slot' = 枠に分ける / 'range' = 空いている時間帯をまとめて
+    alignMinutes: 30,        // 枠の開始をこの分単位に揃える
+    header: '下記の日程でしたら空いております。',
+    footer: 'ご都合いかがでしょうか。',
+    bullet: '・',
+    emptyText: 'この期間は空きがありません。'
+  };
+
+  // ---------- 日付・時刻のちいさな道具 ----------
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+  function parseHM(s) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(String(s || '').trim());
+    if (!m) return null;
+    return Number(m[1]) * 60 + Number(m[2]);
+  }
+
+  function fmtHM(min) {
+    return Math.floor(min / 60) + ':' + pad2(min % 60);
+  }
+
+  function startOfDay(d) {
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  function addDays(d, n) {
+    var r = startOfDay(d);
+    r.setDate(r.getDate() + n);
+    return r;
+  }
+
+  function dateKey(d) {
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+
+  function fromKey(key) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(key || ''));
+    if (!m) return null;
+    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  }
+
+  function isWeekend(d) {
+    var w = d.getDay();
+    return w === 0 || w === 6;
+  }
+
+  function fmtDate(d) {
+    return (d.getMonth() + 1) + '/' + d.getDate() + '（' + WEEKDAYS[d.getDay()] + '）';
+  }
+
+  // ---------- 期間 ----------
+
+  // period: 'thisWeek' | 'nextWeek' | 'twoWeeks'
+  // 週は月曜はじまり。今週 = 今日〜次の日曜。来週 = 次の月曜〜日曜。2週間 = 今日から14日。
+  function periodRange(period, today) {
+    var t = startOfDay(today);
+    var daysToSunday = (7 - t.getDay()) % 7;
+    if (period === 'thisWeek') return { start: t, end: addDays(t, daysToSunday) };
+    if (period === 'nextWeek') {
+      var mon = addDays(t, daysToSunday + 1);
+      return { start: mon, end: addDays(mon, 6) };
+    }
+    return { start: t, end: addDays(t, 13) };
+  }
+
+  // ---------- 区間の計算 ----------
+
+  function mergeIntervals(list) {
+    var sorted = list.slice().sort(function (a, b) { return a.start - b.start; });
+    var out = [];
+    for (var i = 0; i < sorted.length; i++) {
+      var cur = sorted[i];
+      var last = out[out.length - 1];
+      if (last && cur.start <= last.end) {
+        if (cur.end > last.end) last.end = cur.end;
+      } else {
+        out.push({ start: cur.start, end: cur.end });
+      }
+    }
+    return out;
+  }
+
+  // window から busy（merge 済み）を引いた残り
+  function subtract(win, busy) {
+    var free = [];
+    var cursor = win.start;
+    for (var i = 0; i < busy.length; i++) {
+      var b = busy[i];
+      if (b.end <= cursor) continue;
+      if (b.start >= win.end) break;
+      if (b.start > cursor) free.push({ start: cursor, end: Math.min(b.start, win.end) });
+      cursor = Math.max(cursor, b.end);
+      if (cursor >= win.end) break;
+    }
+    if (cursor < win.end) free.push({ start: cursor, end: win.end });
+    return free;
+  }
+
+  // その日の busy 区間（分）。余白つき。終日は日全体。
+  function busyForDay(events, day, settings) {
+    var key = dateKey(day);
+    var buffer = Number(settings.bufferMinutes) || 0;
+    var out = [];
+    for (var i = 0; i < events.length; i++) {
+      var ev = events[i];
+      if (ev.date !== key) continue;
+      if (ev.allDay) {
+        if (settings.allDayBlocks !== false) out.push({ start: -Infinity, end: Infinity });
+        continue;
+      }
+      var s = parseHM(ev.start), e = parseHM(ev.end);
+      if (s === null || e === null || e <= s) continue;
+      out.push({ start: s - buffer, end: e + buffer });
+    }
+    return mergeIntervals(out);
+  }
+
+  function ceilTo(value, unit) {
+    if (!unit || unit <= 0) return value;
+    return Math.ceil(value / unit) * unit;
+  }
+
+  // ---------- 空きを探す ----------
+
+  // 戻り値: [{ date: Date, start: 分, end: 分 }, ...]
+  function findSlots(events, range, settings, now) {
+    var s = Object.assign({}, DEFAULT_SETTINGS, settings || {});
+    var winStart = parseHM(s.startTime);
+    var winEnd = parseHM(s.endTime);
+    var slotLen = Number(s.slotMinutes) || 60;
+    var perDayMax = Number(s.perDayMax) || 0;
+    var align = Number(s.alignMinutes) || 0;
+    if (winStart === null || winEnd === null || winEnd <= winStart) return [];
+
+    var nowDate = now ? new Date(now) : new Date();
+    var firstDay = addDays(nowDate, Number(s.skipDays) || 0);
+    var nowMinutes = nowDate.getHours() * 60 + nowDate.getMinutes();
+
+    var result = [];
+    for (var day = startOfDay(range.start); day <= range.end; day = addDays(day, 1)) {
+      if (day < firstDay) continue;
+      if (!s.includeWeekends && isWeekend(day)) continue;
+
+      var win = { start: winStart, end: winEnd };
+      // 今日を含める設定のときは、もう過ぎた時刻を除く
+      if (dateKey(day) === dateKey(nowDate)) win.start = Math.max(win.start, ceilTo(nowMinutes, align || 1));
+      if (win.end - win.start < slotLen) continue;
+
+      var free = subtract(win, busyForDay(events, day, s));
+      var picked = [];
+      if (s.mode === 'range') {
+        for (var i = 0; i < free.length; i++) {
+          var rs = ceilTo(free[i].start, align);
+          if (free[i].end - rs >= slotLen) picked.push({ date: day, start: rs, end: free[i].end });
+        }
+      } else {
+        // その日に取れる枠を全部並べる
+        for (var j = 0; j < free.length; j++) {
+          for (var st = ceilTo(free[j].start, align); st + slotLen <= free[j].end; st += slotLen) picked.push({ date: day, start: st, end: st + slotLen });
+        }
+      }
+      // 上限があるときは、時間帯が散るように等間隔に選ぶ。
+      // 「10:00〜11:00」「11:00〜12:00」と続けて出すより、午前と午後に散らしたほうが相手が選びやすい。
+      if (perDayMax && picked.length > perDayMax) {
+        var n = picked.length, chosen = [];
+        for (var c = 0; c < perDayMax; c++) chosen.push(picked[perDayMax === 1 ? 0 : Math.round(c * (n - 1) / (perDayMax - 1))]);
+        picked = chosen;
+      }
+      picked.sort(function (a, b) { return a.start - b.start; });
+      for (var q = 0; q < picked.length; q++) result.push(picked[q]);
+    }
+    return result;
+  }
+
+  // ---------- 文面にする ----------
+
+  function formatSlot(slot) {
+    return fmtDate(slot.date) + fmtHM(slot.start) + '〜' + fmtHM(slot.end);
+  }
+
+  function buildText(slots, settings) {
+    var s = Object.assign({}, DEFAULT_SETTINGS, settings || {});
+    if (!slots.length) return s.emptyText;
+    var lines = [];
+    if (s.header) lines.push(s.header, '');
+    for (var i = 0; i < slots.length; i++) lines.push((s.bullet || '') + formatSlot(slots[i]));
+    if (s.footer) lines.push('', s.footer);
+    return lines.join('\n');
+  }
+
+  function generate(events, period, settings, now) {
+    var nowDate = now ? new Date(now) : new Date();
+    var range = periodRange(period, nowDate);
+    var slots = findSlots(events, range, settings, nowDate);
+    return { range: range, slots: slots, text: buildText(slots, settings) };
+  }
+
+  // ---------- お試しの予定（段階1用） ----------
+
+  // 今日を起点に、それらしい予定を並べる。乱数は使わない（いつ開いても同じ形になるように）。
+  function sampleEvents(today) {
+    var t = startOfDay(today || new Date());
+    var out = [];
+    var id = 1;
+    function push(offset, start, end, title, allDay) {
+      out.push({ id: 'sample-' + (id++), date: dateKey(addDays(t, offset)), start: start, end: end, title: title, allDay: !!allDay });
+    }
+    for (var off = 0; off <= 20; off++) {
+      var d = addDays(t, off);
+      var w = d.getDay();
+      if (w === 0) continue;                          // 日曜は空ける
+      if (w === 6) { if (off % 2 === 0) push(off, '', '', '研修', true); continue; }
+      switch (off % 5) {
+        case 0: push(off, '10:00', '12:00', '訪問（田中さん）'); push(off, '15:00', '16:00', '打ち合わせ'); break;
+        case 1: push(off, '13:00', '14:30', '訪問（佐藤さん）'); break;
+        case 2: push(off, '', '', '研修', true); break;
+        case 3: push(off, '10:30', '11:30', '面談'); push(off, '16:00', '17:30', '訪問（鈴木さん）'); break;
+        case 4: push(off, '14:00', '15:00', '打ち合わせ'); break;
+      }
+    }
+    return out;
+  }
+
+  return {
+    WEEKDAYS: WEEKDAYS,
+    DEFAULT_SETTINGS: DEFAULT_SETTINGS,
+    parseHM: parseHM,
+    fmtHM: fmtHM,
+    fmtDate: fmtDate,
+    dateKey: dateKey,
+    fromKey: fromKey,
+    addDays: addDays,
+    startOfDay: startOfDay,
+    periodRange: periodRange,
+    mergeIntervals: mergeIntervals,
+    subtract: subtract,
+    findSlots: findSlots,
+    formatSlot: formatSlot,
+    buildText: buildText,
+    generate: generate,
+    sampleEvents: sampleEvents
+  };
+});
+</script>
+<script>
+/* 空き日程を出す道具 ― 画面の動き。計算は slots.js。 */
+(function () {
+  'use strict';
+  var S = window.AkiSlots;
+  var KEY_SETTINGS = 'akinittei.settings';
+  var KEY_EVENTS = 'akinittei.events';
+  var KEY_PERIOD = 'akinittei.period';
+
+  // ---------- 予定の出どころ ----------
+  // Google Apps Script のウェブアプリとして動いているときは Googleカレンダーから読む。
+  // それ以外（ふつうに index.html を開いたとき）は端末内の予定（初回はお試しの予定）を使う。
+  var calendarMode = !!(window.google && window.google.script && window.google.script.run);
+
+  // ---------- 保存（端末の中） ----------
+  function load(key, fallback) {
+    try {
+      var raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) { return fallback; }
+  }
+  function save(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* 保存できなくても動く */ }
+  }
+
+  var settings = Object.assign({}, S.DEFAULT_SETTINGS, load(KEY_SETTINGS, {}));
+  var period = load(KEY_PERIOD, 'nextWeek');
+
+  // 端末内の予定（お試し版のときだけ使う）
+  var localEvents = load(KEY_EVENTS, null);
+  var usingSample = false;
+  if (!Array.isArray(localEvents)) { localEvents = S.sampleEvents(new Date()); usingSample = true; save(KEY_EVENTS, localEvents); }
+  else usingSample = localEvents.length > 0 && localEvents.every(function (e) { return /^sample-/.test(e.id); });
+
+  // Googleカレンダーから最後に読んだ予定（期間ごとに持つ）
+  var fetched = { key: null, events: [] };
+
+  // 期間ぶんの予定を返す（Promise）
+  function fetchEvents(range) {
+    if (!calendarMode) return Promise.resolve(localEvents);
+    var key = S.dateKey(range.start) + '_' + S.dateKey(range.end);
+    if (fetched.key === key) return Promise.resolve(fetched.events);
+    return new Promise(function (resolve, reject) {
+      google.script.run
+        .withSuccessHandler(function (list) { fetched = { key: key, events: list || [] }; resolve(fetched.events); })
+        .withFailureHandler(function (err) { reject(err); })
+        .getEvents(S.dateKey(range.start), S.dateKey(range.end));
+    });
+  }
+
+  // ---------- 要素 ----------
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $$(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+
+  var views = { main: $('#view-main'), events: $('#view-events'), settings: $('#view-settings') };
+  var generateBtn = $('#btn-generate');
+  var outputCard = $('#output-card');
+  var output = $('#output');
+  var outputHint = $('#output-hint');
+  var rangeLabel = $('#range-label');
+  var errorBox = $('#fetch-error');
+  var toastEl = $('#toast');
+  var toastTimer = null;
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.hidden = true; }, 1800);
+  }
+
+  // モードに応じて見せる部分を切り替える
+  document.body.classList.add(calendarMode ? 'mode-calendar' : 'mode-sample');
+  $$('[data-only="sample"]').forEach(function (el) { el.hidden = calendarMode; });
+  $$('[data-only="calendar"]').forEach(function (el) { el.hidden = !calendarMode; });
+
+  // ---------- 画面の切り替え ----------
+  function show(name) {
+    Object.keys(views).forEach(function (k) { views[k].hidden = k !== name; });
+    window.scrollTo(0, 0);
+    if (name === 'events') renderEvents();
+    if (name === 'settings') fillSettingsForm();
+  }
+  $$('[data-open]').forEach(function (b) { b.addEventListener('click', function () { show(b.getAttribute('data-open')); }); });
+  $$('[data-close]').forEach(function (b) { b.addEventListener('click', function () { show('main'); }); });
+
+  // ---------- メイン：期間 ----------
+  function currentRange() { return S.periodRange(period, new Date()); }
+  function renderPeriod() {
+    $$('.seg').forEach(function (b) { b.setAttribute('aria-checked', String(b.getAttribute('data-period') === period)); });
+    var r = currentRange();
+    rangeLabel.textContent = S.fmtDate(r.start) + ' 〜 ' + S.fmtDate(r.end);
+  }
+  $$('.seg').forEach(function (b) {
+    b.addEventListener('click', function () {
+      period = b.getAttribute('data-period');
+      save(KEY_PERIOD, period);
+      renderPeriod();
+      if (!outputCard.hidden) generate();
+    });
+  });
+
+  // ---------- メイン：空きを出す ----------
+  function autosize() {
+    output.style.height = 'auto';
+    output.style.height = (output.scrollHeight + 4) + 'px';
+  }
+  function setBusy(busy) {
+    generateBtn.disabled = busy;
+    generateBtn.textContent = busy ? '予定を読んでいます…' : '空きを出す';
+  }
+  function showFetchError(err) {
+    var detail = (err && (err.message || String(err))) || '';
+    errorBox.textContent = 'Googleカレンダーの予定を読めませんでした。ページを開き直してみてください。' + (detail ? '（' + detail + '）' : '');
+    errorBox.hidden = false;
+  }
+  var generating = false;
+  function generate() {
+    if (generating) return;
+    generating = true;
+    errorBox.hidden = true;
+    var range = currentRange();
+    setBusy(calendarMode);
+    fetchEvents(range).then(function (events) {
+      var slots = S.findSlots(events, range, settings, new Date());
+      output.value = S.buildText(slots, settings);
+      outputCard.hidden = false;
+      autosize();
+      if (slots.length === 0) {
+        outputHint.textContent = period === 'thisWeek' ? '「来週」か「2週間」にしてみてください。' : '設定で時間帯や土日を広げると出やすくなります。';
+      } else {
+        outputHint.textContent = slots.length + '件の候補です。文面は直接書き足せます。';
+      }
+    }, showFetchError).then(function () { setBusy(false); generating = false; });
+  }
+  generateBtn.addEventListener('click', generate);
+  output.addEventListener('input', autosize);
+  output.removeAttribute('readonly'); // 出た文面をその場で直せるように
+
+  // ---------- メイン：コピー ----------
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function (resolve, reject) {
+      try {
+        output.focus(); output.select(); output.setSelectionRange(0, text.length);
+        var ok = document.execCommand('copy');
+        output.blur();
+        ok ? resolve() : reject(new Error('copy failed'));
+      } catch (e) { reject(e); }
+    });
+  }
+  $('#btn-copy').addEventListener('click', function () {
+    var text = output.value;
+    if (!text) return;
+    copyText(text).then(function () { toast('コピーしました'); },
+      function () { output.focus(); output.select(); toast('長押しでコピーしてください'); });
+  });
+
+  // ---------- 予定 ----------
+  var eventForm = $('#event-form');
+  var eventError = $('#event-error');
+  var eventList = $('#event-list');
+  var eventEmpty = $('#event-empty');
+  var eventsHint = $('#events-hint');
+  var sampleNote = $('#sample-note');
+
+  function setLocalEvents(next, sample) {
+    localEvents = next; usingSample = !!sample;
+    save(KEY_EVENTS, localEvents);
+    renderEvents();
+    sampleNote.hidden = !usingSample;
+    if (!outputCard.hidden) generate();
+  }
+
+  function renderEventList(events, deletable) {
+    var sorted = events.slice().sort(function (a, b) {
+      return (a.date + (a.allDay ? '00:00' : a.start)).localeCompare(b.date + (b.allDay ? '00:00' : b.start));
+    });
+    eventList.innerHTML = '';
+    eventEmpty.hidden = sorted.length > 0;
+    sorted.forEach(function (ev) {
+      var li = document.createElement('li');
+      var d = S.fromKey(ev.date);
+      var date = document.createElement('span'); date.className = 'event-date'; date.textContent = d ? S.fmtDate(d) : ev.date;
+      var time = document.createElement('span'); time.className = 'event-time'; time.textContent = ev.allDay ? '終日' : ev.start + '〜' + ev.end;
+      var title = document.createElement('span'); title.className = 'event-title'; title.textContent = ev.title || '予定';
+      li.append(date, time, title);
+      if (deletable) {
+        var del = document.createElement('button'); del.type = 'button'; del.className = 'event-del'; del.textContent = '消す';
+        del.setAttribute('aria-label', (ev.title || '予定') + 'を消す');
+        del.addEventListener('click', function () {
+          setLocalEvents(localEvents.filter(function (e) { return e.id !== ev.id; }), false);
+        });
+        li.appendChild(del);
+      }
+      eventList.appendChild(li);
+    });
+  }
+
+  function renderEvents() {
+    if (!calendarMode) { renderEventList(localEvents, true); return; }
+    // Googleカレンダー版：いま選んでいる期間の予定を読んで見せるだけ（直すのはカレンダー側で）
+    var range = currentRange();
+    eventsHint.textContent = S.fmtDate(range.start) + ' 〜 ' + S.fmtDate(range.end) + ' の予定を読んでいます…';
+    fetchEvents(range).then(function (events) {
+      eventsHint.textContent = S.fmtDate(range.start) + ' 〜 ' + S.fmtDate(range.end) + ' の予定です。直すときは Googleカレンダーで。';
+      renderEventList(events, false);
+    }, function (err) {
+      eventsHint.textContent = '';
+      showFetchError(err);
+    });
+  }
+
+  var allDayBox = eventForm.elements.allDay;
+  var timeRow = $('#time-row');
+  allDayBox.addEventListener('change', function () { timeRow.hidden = allDayBox.checked; });
+  eventForm.elements.date.value = S.dateKey(S.addDays(new Date(), 1));
+
+  eventForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = eventForm.elements;
+    var ev = {
+      id: 'ev-' + Date.now(),
+      date: f.date.value,
+      allDay: f.allDay.checked,
+      start: f.allDay.checked ? '' : f.start.value,
+      end: f.allDay.checked ? '' : f.end.value,
+      title: f.title.value.trim()
+    };
+    eventError.hidden = true;
+    if (!S.fromKey(ev.date)) return showError('日付を入れてください。');
+    if (!ev.allDay) {
+      var s = S.parseHM(ev.start), en = S.parseHM(ev.end);
+      if (s === null || en === null) return showError('開始と終了の時刻を入れてください。');
+      if (en <= s) return showError('終了は開始より後にしてください。');
+    }
+    setLocalEvents(localEvents.concat([ev]), false);
+    f.title.value = '';
+    toast('予定を足しました');
+  });
+  function showError(msg) { eventError.textContent = msg; eventError.hidden = false; }
+
+  $('#btn-reset-sample').addEventListener('click', function () {
+    setLocalEvents(S.sampleEvents(new Date()), true);
+    toast('お試しの予定に戻しました');
+  });
+  // 「全部消す」は二度押しで確定する（確認ダイアログが出ない環境でも動くように）
+  var clearBtn = $('#btn-clear-events');
+  var clearArmed = null;
+  clearBtn.addEventListener('click', function () {
+    if (clearArmed) {
+      clearTimeout(clearArmed); clearArmed = null;
+      clearBtn.textContent = '予定を全部消す';
+      setLocalEvents([], false);
+      toast('予定を消しました');
+      return;
+    }
+    clearBtn.textContent = 'もう一度押すと全部消えます';
+    clearArmed = setTimeout(function () { clearArmed = null; clearBtn.textContent = '予定を全部消す'; }, 3000);
+  });
+
+  // Googleカレンダー版：読み直し
+  $('#btn-reload-events').addEventListener('click', function () {
+    fetched = { key: null, events: [] };
+    renderEvents();
+  });
+
+  // ---------- 設定 ----------
+  var settingsForm = $('#settings-form');
+  var settingKeys = ['startTime', 'endTime', 'slotMinutes', 'bufferMinutes', 'includeWeekends', 'allDayBlocks', 'skipDays', 'perDayMax', 'mode', 'header', 'footer', 'bullet', 'emptyText'];
+
+  function fillSettingsForm() {
+    settingKeys.forEach(function (k) {
+      var el = settingsForm.elements[k];
+      if (!el) return;
+      if (el.type === 'checkbox') el.checked = !!settings[k];
+      else el.value = String(settings[k]);
+    });
+  }
+  function readSettingsForm() {
+    settingKeys.forEach(function (k) {
+      var el = settingsForm.elements[k];
+      if (!el) return;
+      if (el.type === 'checkbox') settings[k] = el.checked;
+      else if (['slotMinutes', 'bufferMinutes', 'skipDays', 'perDayMax'].indexOf(k) >= 0) settings[k] = Number(el.value);
+      else settings[k] = el.value;
+    });
+    save(KEY_SETTINGS, settings);
+    if (!outputCard.hidden) generate();
+  }
+  settingsForm.addEventListener('change', readSettingsForm);
+  settingsForm.addEventListener('input', function (e) { if (e.target.tagName === 'TEXTAREA' || e.target.type === 'text') readSettingsForm(); });
+  settingsForm.addEventListener('submit', function (e) { e.preventDefault(); });
+  $('#btn-reset-settings').addEventListener('click', function () {
+    settings = Object.assign({}, S.DEFAULT_SETTINGS);
+    save(KEY_SETTINGS, settings);
+    fillSettingsForm();
+    toast('最初の設定に戻しました');
+  });
+
+  // ---------- 起動 ----------
+  sampleNote.hidden = calendarMode || !usingSample;
+  renderPeriod();
+  show('main');
+})();
+</script>
+</body>
+</html>

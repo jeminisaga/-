@@ -17,6 +17,7 @@
     slotMinutes: 60,         // 1件あたりの長さ
     bufferMinutes: 30,       // 予定の前後にあける余白
     includeWeekends: false,  // 土日を候補に入れるか
+    allDayBlocks: true,      // 終日の予定がある日を「空きなし」とみなすか
     skipDays: 1,             // 直近を何日除くか（1 = 明日から）
     perDayMax: 2,            // 1日に出す候補の数（0 = 全部）
     mode: 'slot',            // 'slot' = 枠に分ける / 'range' = 空いている時間帯をまとめて
@@ -126,7 +127,10 @@
     for (var i = 0; i < events.length; i++) {
       var ev = events[i];
       if (ev.date !== key) continue;
-      if (ev.allDay) { out.push({ start: -Infinity, end: Infinity }); continue; }
+      if (ev.allDay) {
+        if (settings.allDayBlocks !== false) out.push({ start: -Infinity, end: Infinity });
+        continue;
+      }
       var s = parseHM(ev.start), e = parseHM(ev.end);
       if (s === null || e === null || e <= s) continue;
       out.push({ start: s - buffer, end: e + buffer });
@@ -173,18 +177,18 @@
           if (free[i].end - rs >= slotLen) picked.push({ date: day, start: rs, end: free[i].end });
         }
       } else {
-        // 空き区間ごとに枠を並べ、区間をまたいで交互に取る。
-        // 同じ日に「10:00〜11:00」「11:00〜12:00」と続けて出すより、午前と午後に散らしたほうが相手が選びやすい。
-        var perInterval = free.map(function (f) {
-          var list = [];
-          for (var st = ceilTo(f.start, align); st + slotLen <= f.end; st += slotLen) list.push({ date: day, start: st, end: st + slotLen });
-          return list;
-        });
-        for (var k = 0; perInterval.some(function (l) { return l.length > k; }); k++) {
-          for (var j = 0; j < perInterval.length; j++) if (perInterval[j][k]) picked.push(perInterval[j][k]);
+        // その日に取れる枠を全部並べる
+        for (var j = 0; j < free.length; j++) {
+          for (var st = ceilTo(free[j].start, align); st + slotLen <= free[j].end; st += slotLen) picked.push({ date: day, start: st, end: st + slotLen });
         }
       }
-      if (perDayMax && picked.length > perDayMax) picked = picked.slice(0, perDayMax);
+      // 上限があるときは、時間帯が散るように等間隔に選ぶ。
+      // 「10:00〜11:00」「11:00〜12:00」と続けて出すより、午前と午後に散らしたほうが相手が選びやすい。
+      if (perDayMax && picked.length > perDayMax) {
+        var n = picked.length, chosen = [];
+        for (var c = 0; c < perDayMax; c++) chosen.push(picked[perDayMax === 1 ? 0 : Math.round(c * (n - 1) / (perDayMax - 1))]);
+        picked = chosen;
+      }
       picked.sort(function (a, b) { return a.start - b.start; });
       for (var q = 0; q < picked.length; q++) result.push(picked[q]);
     }

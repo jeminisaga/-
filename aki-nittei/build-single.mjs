@@ -24,6 +24,12 @@ if (!html.includes('function $$(')) throw new Error('app.js の $$ が壊れて�
 // 1ファイル版では外部ファイルへの参照を落とす
 html = html.replace(/ *<link rel="(manifest|icon|apple-touch-icon)"[^>]*>\n/g, '');
 
+// --gas: Google Apps Script の HtmlService 向け。リンクが枠の中で開かないように base を入れる
+if (args.includes('--gas')) {
+  html = inline(html, '<meta charset="utf-8">', '<meta charset="utf-8">\n  <base target="_top">');
+  html = '<!-- 生成物。直すときは index.html / style.css / slots.js / app.js を直して `node build-single.mjs gas/index.html --gas` -->\n' + html;
+}
+
 // --body-only: <title> と <style> を先頭に置いた本文だけにする（外側の枠を用意してくれる置き場所向け）
 if (bodyOnly) {
   const title = html.match(/<title>.*?<\/title>/)[0];

@@ -94,6 +94,12 @@ body {
 .event-del { border: none; background: transparent; color: var(--danger); font-size: 15px; padding: 8px; cursor: pointer; }
 
 .version { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }
+.hint-top { margin: 0 0 10px; }
+.btn-link {
+  display: block; text-align: center; margin-top: 12px; padding: 12px; color: var(--green);
+  font-size: 16px; font-weight: 600; text-decoration: none;
+}
+.btn-primary:disabled { opacity: .6; cursor: default; }
 .boot-error {
   position: fixed; left: 12px; right: 12px; top: 12px; z-index: 20;
   background: #fdecea; color: var(--danger); border: 1px solid #f1b8b2; border-radius: 10px;
