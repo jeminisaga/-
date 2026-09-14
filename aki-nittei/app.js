@@ -177,9 +177,19 @@
     setEvents(S.sampleEvents(new Date()), true);
     toast('お試しの予定に戻しました');
   });
-  $('#btn-clear-events').addEventListener('click', function () {
-    if (!confirm('予定を全部消します。よろしいですか？')) return;
-    setEvents([], false);
+  // 「全部消す」は二度押しで確定する（確認ダイアログが出ない環境でも動くように）
+  var clearBtn = $('#btn-clear-events');
+  var clearArmed = null;
+  clearBtn.addEventListener('click', function () {
+    if (clearArmed) {
+      clearTimeout(clearArmed); clearArmed = null;
+      clearBtn.textContent = '予定を全部消す';
+      setEvents([], false);
+      toast('予定を消しました');
+      return;
+    }
+    clearBtn.textContent = 'もう一度押すと全部消えます';
+    clearArmed = setTimeout(function () { clearArmed = null; clearBtn.textContent = '予定を全部消す'; }, 3000);
   });
 
   // ---------- 設定 ----------

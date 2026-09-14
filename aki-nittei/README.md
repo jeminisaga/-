@@ -7,8 +7,10 @@
 
 サーバー不要。`index.html` を開くだけ。
 
-- 携帯で見せる: このフォルダをネット上に置いて（GitHub Pages など）そのURLを開く → 共有メニューの「ホーム画面に追加」
+- 携帯で見せる（いま）: https://claude.ai/code/artifact/7a5e9453-36cf-42fd-b4f8-6a1195283f05 （claude.ai 上のページ。最初は自分だけが見られる。ページの共有メニューから相手に渡せる）
+- 携帯で見せる（本番）: このフォルダをネット上に置いて（GitHub Pages など）そのURLを開く → 共有メニューの「ホーム画面に追加」
 - 手元で確認: `python3 -m http.server 8000` を実行して `http://localhost:8000/aki-nittei/` を開く
+- 1ファイルにまとめる: `node build-single.mjs 出力先.html`（メール添付などで渡すとき）
 
 ## 画面
 
