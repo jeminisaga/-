@@ -93,6 +93,12 @@ body {
 .event-title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .event-del { border: none; background: transparent; color: var(--danger); font-size: 15px; padding: 8px; cursor: pointer; }
 
+.version { text-align: center; color: var(--muted); font-size: 12px; margin: 0; }
+.boot-error {
+  position: fixed; left: 12px; right: 12px; top: 12px; z-index: 20;
+  background: #fdecea; color: var(--danger); border: 1px solid #f1b8b2; border-radius: 10px;
+  padding: 12px 14px; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere;
+}
 .toast {
   position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); transform: translateX(-50%);
   background: var(--text); color: #fff; padding: 12px 20px; border-radius: 999px; font-size: 16px;

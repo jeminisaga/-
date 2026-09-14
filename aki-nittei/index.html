@@ -48,7 +48,19 @@
   <p class="note" id="sample-note">
     いまは<strong>お試しの予定</strong>で動いています。<button type="button" class="link" data-open="events">予定を見る</button>
   </p>
+  <p class="version">版 3（9/14）</p>
 </main>
+
+<div id="boot-error" class="boot-error" hidden></div>
+<script>
+  // 画面が動かないとき、原因を見える場所に出す（開発者ツールが開けない携帯向け）
+  window.addEventListener('error', function (e) {
+    var el = document.getElementById('boot-error');
+    if (!el) return;
+    el.hidden = false;
+    el.textContent = '画面の読み込みで問題が起きました。この文をそのまま伝えてください: ' + (e.message || '不明なエラー');
+  });
+</script>
 
 <!-- ===== 予定（段階1はここに手で入れる） ===== -->
 <section id="view-events" class="view" hidden>
