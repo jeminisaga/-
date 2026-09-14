@@ -20,6 +20,7 @@
     allDayBlocks: true,      // 終日の予定がある日を「空きなし」とみなすか
     skipDays: 1,             // 直近を何日除くか（1 = 明日から）
     perDayMax: 2,            // 1日に出す候補の数（0 = 全部）
+    maxTotal: 0,             // 1回に出す候補の数の上限（0 = 全部）
     mode: 'slot',            // 'slot' = 枠に分ける / 'range' = 空いている時間帯をまとめて
     alignMinutes: 30,        // 枠の開始をこの分単位に揃える
     header: '下記の日程でしたら空いております。',
@@ -191,6 +192,13 @@
       }
       picked.sort(function (a, b) { return a.start - b.start; });
       for (var q = 0; q < picked.length; q++) result.push(picked[q]);
+    }
+    // 1回に出す数の上限。日が散るように等間隔に選ぶ
+    var maxTotal = Number(s.maxTotal) || 0;
+    if (maxTotal && result.length > maxTotal) {
+      var total = result.length, kept = [];
+      for (var t = 0; t < maxTotal; t++) kept.push(result[maxTotal === 1 ? 0 : Math.round(t * (total - 1) / (maxTotal - 1))]);
+      result = kept;
     }
     return result;
   }

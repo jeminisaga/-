@@ -169,7 +169,7 @@ body {
     <span id="who-am-i"></span>
     <a class="link" id="switch-account" href="https://accounts.google.com/" target="_top" rel="noopener">別のアカウントで開く</a>
   </p>
-  <p class="version">版 5（9/14）</p>
+  <p class="version">版 6（9/14）</p>
 </main>
 
 <div id="boot-error" class="boot-error" hidden></div>
@@ -271,6 +271,14 @@ body {
         <option value="0">全部</option>
       </select>
     </label>
+    <label>1回に出す数（全部で）
+      <select name="maxTotal">
+        <option value="3">3つまで</option>
+        <option value="5">5つまで</option>
+        <option value="8">8つまで</option>
+        <option value="0">制限なし</option>
+      </select>
+    </label>
     <label>出し方
       <select name="mode">
         <option value="slot">枠に分ける（14:00〜15:00）</option>
@@ -313,6 +321,7 @@ body {
     allDayBlocks: true,      // 終日の予定がある日を「空きなし」とみなすか
     skipDays: 1,             // 直近を何日除くか（1 = 明日から）
     perDayMax: 2,            // 1日に出す候補の数（0 = 全部）
+    maxTotal: 0,             // 1回に出す候補の数の上限（0 = 全部）
     mode: 'slot',            // 'slot' = 枠に分ける / 'range' = 空いている時間帯をまとめて
     alignMinutes: 30,        // 枠の開始をこの分単位に揃える
     header: '下記の日程でしたら空いております。',
@@ -484,6 +493,13 @@ body {
       }
       picked.sort(function (a, b) { return a.start - b.start; });
       for (var q = 0; q < picked.length; q++) result.push(picked[q]);
+    }
+    // 1回に出す数の上限。日が散るように等間隔に選ぶ
+    var maxTotal = Number(s.maxTotal) || 0;
+    if (maxTotal && result.length > maxTotal) {
+      var total = result.length, kept = [];
+      for (var t = 0; t < maxTotal; t++) kept.push(result[maxTotal === 1 ? 0 : Math.round(t * (total - 1) / (maxTotal - 1))]);
+      result = kept;
     }
     return result;
   }
@@ -840,7 +856,7 @@ body {
 
   // ---------- 設定 ----------
   var settingsForm = $('#settings-form');
-  var settingKeys = ['startTime', 'endTime', 'slotMinutes', 'bufferMinutes', 'includeWeekends', 'allDayBlocks', 'skipDays', 'perDayMax', 'mode', 'header', 'footer', 'bullet', 'emptyText'];
+  var settingKeys = ['startTime', 'endTime', 'slotMinutes', 'bufferMinutes', 'includeWeekends', 'allDayBlocks', 'skipDays', 'perDayMax', 'maxTotal', 'mode', 'header', 'footer', 'bullet', 'emptyText'];
 
   function fillSettingsForm() {
     settingKeys.forEach(function (k) {
@@ -855,7 +871,7 @@ body {
       var el = settingsForm.elements[k];
       if (!el) return;
       if (el.type === 'checkbox') settings[k] = el.checked;
-      else if (['slotMinutes', 'bufferMinutes', 'skipDays', 'perDayMax'].indexOf(k) >= 0) settings[k] = Number(el.value);
+      else if (['slotMinutes', 'bufferMinutes', 'skipDays', 'perDayMax', 'maxTotal'].indexOf(k) >= 0) settings[k] = Number(el.value);
       else settings[k] = el.value;
     });
     save(KEY_SETTINGS, settings);

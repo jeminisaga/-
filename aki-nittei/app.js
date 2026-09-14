@@ -279,7 +279,7 @@
 
   // ---------- 設定 ----------
   var settingsForm = $('#settings-form');
-  var settingKeys = ['startTime', 'endTime', 'slotMinutes', 'bufferMinutes', 'includeWeekends', 'allDayBlocks', 'skipDays', 'perDayMax', 'mode', 'header', 'footer', 'bullet', 'emptyText'];
+  var settingKeys = ['startTime', 'endTime', 'slotMinutes', 'bufferMinutes', 'includeWeekends', 'allDayBlocks', 'skipDays', 'perDayMax', 'maxTotal', 'mode', 'header', 'footer', 'bullet', 'emptyText'];
 
   function fillSettingsForm() {
     settingKeys.forEach(function (k) {
@@ -294,7 +294,7 @@
       var el = settingsForm.elements[k];
       if (!el) return;
       if (el.type === 'checkbox') settings[k] = el.checked;
-      else if (['slotMinutes', 'bufferMinutes', 'skipDays', 'perDayMax'].indexOf(k) >= 0) settings[k] = Number(el.value);
+      else if (['slotMinutes', 'bufferMinutes', 'skipDays', 'perDayMax', 'maxTotal'].indexOf(k) >= 0) settings[k] = Number(el.value);
       else settings[k] = el.value;
     });
     save(KEY_SETTINGS, settings);

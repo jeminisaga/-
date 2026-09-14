@@ -127,3 +127,12 @@ test('findSlots: 終日の予定を無視する設定', () => {
   const late = [{ date: '2026-09-09', start: '17:00', end: '24:00', title: '夜勤' }];
   assert.deepEqual(S.findSlots(late, range, { perDayMax: 0, bufferMinutes: 0 }, MON).map(S.formatSlot).slice(-1), ['9/9（水）16:00〜17:00']);
 });
+
+test('findSlots: 1回に出す数の上限は日が散るように選ぶ', () => {
+  const range = { start: new Date(2026, 8, 8), end: new Date(2026, 8, 11) }; // 火〜金、予定なし
+  const all = S.findSlots([], range, { perDayMax: 2 }, MON);
+  assert.equal(all.length, 8);
+  const three = S.findSlots([], range, { perDayMax: 2, maxTotal: 3 }, MON);
+  assert.deepEqual(three.map(S.formatSlot), ['9/8（火）10:00〜11:00', '9/10（木）10:00〜11:00', '9/11（金）17:00〜18:00']);
+  assert.equal(S.findSlots([], range, { perDayMax: 2, maxTotal: 1 }, MON).length, 1);
+});
