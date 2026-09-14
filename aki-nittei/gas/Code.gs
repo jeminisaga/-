@@ -22,6 +22,22 @@ function doGet() {
 }
 
 /**
+ * 画面から呼ばれる。いま誰のカレンダーを読んでいるか（ログイン中の Googleアカウント）と、
+ * 別のアカウントに切り替えるときの URL を返す。
+ * 「次のユーザーとして実行: ウェブアプリにアクセスしているユーザー」で公開したときに意味がある。
+ */
+function getWhoAmI() {
+  var email = '';
+  try { email = Session.getEffectiveUser().getEmail() || ''; } catch (e) { email = ''; }
+  var url = '';
+  try { url = ScriptApp.getService().getUrl() || ''; } catch (e) { url = ''; }
+  return {
+    email: email,
+    switchUrl: url ? 'https://accounts.google.com/AccountChooser?continue=' + encodeURIComponent(url) : 'https://accounts.google.com/'
+  };
+}
+
+/**
  * 画面から呼ばれる。startKey〜endKey（'YYYY-MM-DD'、両端を含む）の予定を返す。
  * 返す形: [{ id, date: 'YYYY-MM-DD', start: 'HH:mm', end: 'HH:mm', title, allDay }]
  * 日をまたぐ予定は日ごとに分ける。断った予定は入れない。

@@ -264,6 +264,19 @@
     renderEvents();
   });
 
+  // Googleカレンダー版：誰のアカウントで読んでいるかを出す
+  function showWhoAmI() {
+    if (!calendarMode || !google.script.run.getWhoAmI) return;
+    google.script.run
+      .withSuccessHandler(function (info) {
+        if (!info) return;
+        $('#who-am-i').textContent = info.email ? info.email + ' のカレンダーを読んでいます。' : '';
+        if (info.switchUrl) $('#switch-account').href = info.switchUrl;
+      })
+      .withFailureHandler(function () { /* 出なくても困らない */ })
+      .getWhoAmI();
+  }
+
   // ---------- 設定 ----------
   var settingsForm = $('#settings-form');
   var settingKeys = ['startTime', 'endTime', 'slotMinutes', 'bufferMinutes', 'includeWeekends', 'allDayBlocks', 'skipDays', 'perDayMax', 'mode', 'header', 'footer', 'bullet', 'emptyText'];
@@ -301,4 +314,5 @@
   sampleNote.hidden = calendarMode || !usingSample;
   renderPeriod();
   show('main');
+  showWhoAmI();
 })();

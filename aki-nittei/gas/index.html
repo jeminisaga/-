@@ -165,7 +165,11 @@ body {
   <p class="note" data-only="calendar" hidden>
     <strong>Googleカレンダー</strong>の予定から出しています。<button type="button" class="link" data-open="events">読んだ予定を見る</button>
   </p>
-  <p class="version">版 4（9/14）</p>
+  <p class="note who" data-only="calendar" hidden>
+    <span id="who-am-i"></span>
+    <a class="link" id="switch-account" href="https://accounts.google.com/" target="_top" rel="noopener">別のアカウントで開く</a>
+  </p>
+  <p class="version">版 5（9/14）</p>
 </main>
 
 <div id="boot-error" class="boot-error" hidden></div>
@@ -821,6 +825,19 @@ body {
     renderEvents();
   });
 
+  // Googleカレンダー版：誰のアカウントで読んでいるかを出す
+  function showWhoAmI() {
+    if (!calendarMode || !google.script.run.getWhoAmI) return;
+    google.script.run
+      .withSuccessHandler(function (info) {
+        if (!info) return;
+        $('#who-am-i').textContent = info.email ? info.email + ' のカレンダーを読んでいます。' : '';
+        if (info.switchUrl) $('#switch-account').href = info.switchUrl;
+      })
+      .withFailureHandler(function () { /* 出なくても困らない */ })
+      .getWhoAmI();
+  }
+
   // ---------- 設定 ----------
   var settingsForm = $('#settings-form');
   var settingKeys = ['startTime', 'endTime', 'slotMinutes', 'bufferMinutes', 'includeWeekends', 'allDayBlocks', 'skipDays', 'perDayMax', 'mode', 'header', 'footer', 'bullet', 'emptyText'];
@@ -858,6 +875,7 @@ body {
   sampleNote.hidden = calendarMode || !usingSample;
   renderPeriod();
   show('main');
+  showWhoAmI();
 })();
 </script>
 </body>
