@@ -11,10 +11,16 @@ const args = process.argv.slice(2);
 const bodyOnly = args.includes('--body-only');
 const out = args.find((a) => !a.startsWith('--')) || path.join(dir, 'dist', 'aki-nittei.html');
 
+// 置換文字列に関数を渡す。文字列で渡すと `$$` が `$` に化ける（app.js の $$ が壊れる）。
+const inline = (html, needle, body) => {
+  if (!html.includes(needle)) throw new Error('見つからない: ' + needle);
+  return html.replace(needle, () => body);
+};
 let html = read('index.html');
-html = html.replace('<link rel="stylesheet" href="style.css">', '<style>\n' + read('style.css') + '</style>');
-html = html.replace('<script src="slots.js"></script>', '<script>\n' + read('slots.js') + '</script>');
-html = html.replace('<script src="app.js"></script>', '<script>\n' + read('app.js') + '</script>');
+html = inline(html, '<link rel="stylesheet" href="style.css">', '<style>\n' + read('style.css') + '</style>');
+html = inline(html, '<script src="slots.js"></script>', '<script>\n' + read('slots.js') + '</script>');
+html = inline(html, '<script src="app.js"></script>', '<script>\n' + read('app.js') + '</script>');
+if (!html.includes('function $$(')) throw new Error('app.js の $$ が壊れている');
 // 1ファイル版では外部ファイルへの参照を落とす
 html = html.replace(/ *<link rel="(manifest|icon|apple-touch-icon)"[^>]*>\n/g, '');
 
